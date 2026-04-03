@@ -1,9 +1,9 @@
 # Backend Foundation Overview
 
 ## Purpose
-This document describes the initial backend architecture for TripBazarBD.
+This document describes the backend architecture baseline for TripBazarBD.
 
-The goal of this phase is to create a clean NestJS foundation before building business modules such as offers, auth, and reviews.
+The project started with a clean NestJS foundation and now extends that foundation with the first business feature: email/password authentication.
 
 ## Current Structure
 The backend lives in the `apps/backend/` folder.
@@ -14,13 +14,19 @@ This gives the repository a cleaner multi-app layout and makes it easier to add 
 - `AppModule`
   - root application module
   - wires together global configuration and foundational modules
+- `DatabaseModule`
+  - centralizes TypeORM configuration and entity loading
+- `UsersModule`
+  - owns user persistence and user lookup logic
+- `AuthModule`
+  - owns auth orchestration, JWT handling, refresh-token rotation, and current-user retrieval
 - `HealthModule`
   - first non-business module
   - provides a simple health endpoint for runtime verification
 - `config`
   - central place for environment defaults and validation
 - `common`
-  - shared technical infrastructure such as exception filters
+  - shared technical infrastructure such as exception filters, auth decorators, and request typing
 
 ## Bootstrap Responsibilities
 Application bootstrap is responsible for:
@@ -30,12 +36,19 @@ Application bootstrap is responsible for:
 - registering a global exception filter
 - exposing Swagger documentation
 - applying the global API prefix
+- registering bearer-auth documentation for protected routes
 
 ## API Baseline
 - Root endpoint `/`
   - returns application metadata
 - Health endpoint `/api/v1/health`
   - confirms the backend is running
+- Auth endpoint `/api/v1/auth/email`
+  - signs in existing users or creates a new account for first-time users
+- Refresh endpoint `/api/v1/auth/refresh`
+  - rotates refresh tokens and issues a new token pair
+- Current-user endpoint `/api/v1/auth/me`
+  - returns the authenticated user profile
 - Swagger endpoint `/docs`
   - documents the current API contract
 
@@ -44,11 +57,17 @@ Application bootstrap is responsible for:
 - It keeps business logic out of the bootstrap layer.
 - It creates clear extension points for future modules.
 - It supports backend-first development without premature frontend work.
+- It keeps authentication concerns separate from user persistence so later authorization work can build on a clean base.
 
 ## Next Planned Modules
 - `offers`
-- `auth`
 - `reviews`
-- `users`
+
+`auth` and `users` now exist as the first real business modules.
+
+Future work should build on this base by adding:
+- role-based authorization
+- admin-only management flows
+- offers and reviews business modules
 
 These modules are intentionally not implemented in this phase.

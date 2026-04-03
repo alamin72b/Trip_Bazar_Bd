@@ -14,8 +14,14 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  Logger.log(`Application running on http://localhost:${port}/${apiPrefix}`, 'Bootstrap');
-  Logger.log(`Swagger docs available at http://localhost:${port}/docs`, 'Bootstrap');
+  Logger.log(
+    `Application running on http://localhost:${port}/${apiPrefix}`,
+    'Bootstrap',
+  );
+  Logger.log(
+    `Swagger docs available at http://localhost:${port}/docs`,
+    'Bootstrap',
+  );
 }
 
-bootstrap();
+void bootstrap();

@@ -16,6 +16,9 @@ It is built with NestJS and currently provides the technical base for future mod
 - Swagger documentation
 - health endpoint
 - basic application metadata endpoint
+- SQLite-backed user persistence through TypeORM
+- email/password auth with JWT access and rotating refresh tokens
+- authenticated current-user endpoint
 
 ## Project Setup
 ```bash
@@ -27,9 +30,26 @@ npm install
 npm run start:dev
 ```
 
+## Environment Setup
+Create a local env file from the example if you want to override defaults:
+
+```bash
+cp .env.example .env
+```
+
+Important auth variables:
+- `DATABASE_PATH`
+- `JWT_ACCESS_TOKEN_SECRET`
+- `JWT_ACCESS_TOKEN_EXPIRES_IN`
+- `JWT_REFRESH_TOKEN_SECRET`
+- `JWT_REFRESH_TOKEN_EXPIRES_IN`
+
 ## Verify The Backend
 - App info: `http://localhost:3000/`
 - Health check: `http://localhost:3000/api/v1/health`
+- Auth email endpoint: `POST http://localhost:3000/api/v1/auth/email`
+- Auth refresh endpoint: `POST http://localhost:3000/api/v1/auth/refresh`
+- Current user endpoint: `GET http://localhost:3000/api/v1/auth/me`
 - Swagger docs: `http://localhost:3000/docs`
 
 ## Run Tests
@@ -40,6 +60,5 @@ npm run test:e2e
 
 ## Next Planned Modules
 - offers
-- auth
 - reviews
-- users
+- role-based authorization on top of the shared users model
