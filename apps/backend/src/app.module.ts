@@ -10,6 +10,7 @@ import { AdminModule } from './admin/admin.module';
 import { validateEnv } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
+import { OffersModule } from './offers/offers.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -27,6 +28,7 @@ import { AuthModule } from './auth/auth.module';
     UsersModule,
     AuthModule,
     AdminModule,
+    OffersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

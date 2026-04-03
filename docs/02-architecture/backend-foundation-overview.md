@@ -22,6 +22,8 @@ This gives the repository a cleaner multi-app layout and makes it easier to add 
   - owns auth orchestration, JWT handling, refresh-token rotation, and current-user retrieval
 - `AdminModule`
   - owns startup admin bootstrap and admin-only proof routes
+- `OffersModule`
+  - owns offer persistence, admin offer management, and public offer browsing
 - `HealthModule`
   - first non-business module
   - provides a simple health endpoint for runtime verification
@@ -53,6 +55,10 @@ Application bootstrap is responsible for:
   - returns the authenticated user profile
 - Admin proof endpoint `/api/v1/admin/ping`
   - verifies admin-only authorization wiring
+- Admin offer routes `/api/v1/admin/offers`
+  - allow authenticated admins to manage offers
+- Public offer routes `/api/v1/offers`
+  - expose published offers for guest and user browsing
 - Swagger endpoint `/docs`
   - documents the current API contract
 
@@ -64,13 +70,12 @@ Application bootstrap is responsible for:
 - It keeps authentication concerns separate from user persistence so later authorization work can build on a clean base.
 
 ## Next Planned Modules
-- `offers`
 - `reviews`
 
-`auth` and `users` now exist as the first real business modules.
+`auth`, `users`, `admin`, and `offers` now define the backend foundation plus the first product data module.
 
 Future work should build on this base by adding:
-- admin-only management flows
-- offers and reviews business modules
+- review relationships and review endpoints
+- richer offers browsing features such as filters, search, and pagination
 
 These modules are intentionally not implemented in this phase.

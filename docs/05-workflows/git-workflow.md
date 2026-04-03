@@ -61,7 +61,8 @@ Examples:
 6. During planning, suggest any relevant Codex skills, built-in features, or workflow helpers that could speed up or improve the task.
 7. Build the feature in small focused commits.
 8. Update related docs.
-9. Push the branch and open a pull request into `develop`.
+9. At closeout, provide a detailed Conventional Commit message and the exact `git add`, `git commit`, and `git push` commands for the current branch.
+10. Push the branch and open a pull request into `develop`.
 
 ### Planning Reminder
 When discussing implementation plans, proactively call out useful Codex capabilities when they fit the task.
@@ -173,6 +174,15 @@ git push -u origin <current-branch>
 ```
 
 For the current branch, replace the placeholders with the real scope, summary, and branch name.
+
+### Closeout Expectation
+After implementation, the task closeout should include:
+- what changed
+- what was verified
+- a detailed Conventional Commit message
+- exact `git add`, `git commit`, and `git push` commands for the current branch
+
+This should be provided proactively so the user does not need to ask for Git commands again after each task.
 
 ### Push Branch
 ```bash
