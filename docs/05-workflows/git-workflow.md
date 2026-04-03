@@ -103,6 +103,8 @@ The helper:
 
 See [merge-into-develop-helper.md](./merge-into-develop-helper.md) for the full workflow.
 
+For project-local Codex guidance, see [project-skills/merge-into-develop/SKILL.md](/home/al-amin72b/Desktop/Trip_Bazar_Bd/project-skills/merge-into-develop/SKILL.md). This is a repo-contained skill definition, not a globally installed Codex skill.
+
 ## 4. Conventional Commit Format
 
 Use this format:
