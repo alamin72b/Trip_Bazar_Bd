@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Raw, Repository } from 'typeorm';
+import { AdminOfferListQueryDto } from './dto/admin-offer-list-query.dto';
+import { AdminOfferListResponseDto } from './dto/admin-offer-list-response.dto';
 import { Offer } from './entities/offer.entity';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
@@ -32,14 +34,27 @@ export class OffersService {
     return this.toResponseDto(savedOffer);
   }
 
-  async getAdminOffers(): Promise<OfferResponseDto[]> {
-    const offers = await this.offersRepository.find({
+  async getAdminOffers(
+    query: AdminOfferListQueryDto,
+  ): Promise<AdminOfferListResponseDto> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const where = this.buildAdminOffersWhere(query);
+    const [offers, total] = await this.offersRepository.findAndCount({
+      where,
       order: {
         createdAt: 'DESC',
       },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return offers.map((offer) => this.toResponseDto(offer));
+    return {
+      items: offers.map((offer) => this.toResponseDto(offer)),
+      total,
+      page,
+      limit,
+    };
   }
 
   async getAdminOfferById(id: string): Promise<OfferResponseDto> {
@@ -91,6 +106,16 @@ export class OffersService {
     return this.toResponseDto(updatedOffer);
   }
 
+  async deleteOffer(id: string): Promise<void> {
+    const deleteResult = await this.offersRepository.delete({
+      id,
+    });
+
+    if (!deleteResult.affected) {
+      throw new NotFoundException('Offer not found.');
+    }
+  }
+
   async getPublishedOffers(): Promise<OfferResponseDto[]> {
     const offers = await this.offersRepository.find({
       where: {
@@ -117,6 +142,48 @@ export class OffersService {
     }
 
     return this.toResponseDto(offer);
+  }
+
+  private buildAdminOffersWhere(
+    query: AdminOfferListQueryDto,
+  ): FindOptionsWhere<Offer> | FindOptionsWhere<Offer>[] | undefined {
+    const status = query.status;
+    const normalizedSearch = query.search?.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return status
+        ? {
+            status,
+          }
+        : undefined;
+    }
+
+    const search = `%${normalizedSearch}%`;
+
+    return [
+      {
+        ...(status ? { status } : {}),
+        title: this.createAdminSearchFilter(search),
+      },
+      {
+        ...(status ? { status } : {}),
+        destination: this.createAdminSearchFilter(search),
+      },
+      {
+        ...(status ? { status } : {}),
+        summary: this.createAdminSearchFilter(search),
+      },
+      {
+        ...(status ? { status } : {}),
+        slug: this.createAdminSearchFilter(search),
+      },
+    ];
+  }
+
+  private createAdminSearchFilter(search: string) {
+    return Raw((alias) => `LOWER(${alias}) LIKE :search`, {
+      search,
+    });
   }
 
   private async generateUniqueSlug(

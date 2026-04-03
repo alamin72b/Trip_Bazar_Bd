@@ -42,6 +42,10 @@ The first version intentionally stores image URLs directly on the offer record t
 - public detail uses `slug`, not internal `id`
 - drafts are stored normally but hidden from public routes
 - admin routes can view both drafts and published offers
+- admin list supports filtering by `status` and text search over `title`, `destination`, `summary`, and `slug`
+- admin list supports pagination with `page` and `limit`
+- deleting an offer is a hard delete
+- related reviews are removed by the existing `reviews.offerId -> offers.id` cascade
 
 ## Indexes
 - unique index on `offers.slug`

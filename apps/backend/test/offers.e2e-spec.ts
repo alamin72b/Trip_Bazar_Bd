@@ -2,6 +2,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   INestApplication,
+  NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
@@ -109,6 +110,64 @@ describe('OffersController (integration)', () => {
     expect(updatedOffer.status).toBe(OfferStatus.PUBLISHED);
   });
 
+  it('admin list supports combined filters and pagination', async () => {
+    await adminOffersController.createOffer({
+      title: "Cox's Bazar Weekend Escape",
+      summary: 'A short beach getaway package for the weekend.',
+      description:
+        "Three days and two nights in Cox's Bazar with hotel stay included.",
+      destination: "Cox's Bazar",
+      durationNights: 2,
+      price: 12500,
+      currency: 'BDT',
+      imageUrls: ['https://example.com/coxs-bazar-1.jpg'],
+      contactWhatsApp: '+8801700000000',
+      status: OfferStatus.PUBLISHED,
+    });
+
+    await adminOffersController.createOffer({
+      title: "Cox's Bazar Family Escape",
+      summary: 'A family beach package for a longer holiday.',
+      description:
+        "Four days and three nights in Cox's Bazar with hotel and breakfast included.",
+      destination: "Cox's Bazar",
+      durationNights: 3,
+      price: 22500,
+      currency: 'BDT',
+      imageUrls: ['https://example.com/coxs-bazar-2.jpg'],
+      contactWhatsApp: '+8801700000000',
+      status: OfferStatus.PUBLISHED,
+    });
+
+    await adminOffersController.createOffer({
+      title: 'Sajek Valley Escape',
+      summary: 'A short hill trip package.',
+      description:
+        'Two days and one night in Sajek with transport and hotel included.',
+      destination: 'Sajek',
+      durationNights: 1,
+      price: 8500,
+      currency: 'BDT',
+      imageUrls: ['https://example.com/sajek-1.jpg'],
+      contactWhatsApp: '+8801700000000',
+      status: OfferStatus.DRAFT,
+    });
+
+    const adminOffers = await adminOffersController.getAdminOffers({
+      status: OfferStatus.PUBLISHED,
+      search: 'coxs',
+      page: 1,
+      limit: 1,
+    });
+
+    expect(adminOffers.items).toHaveLength(1);
+    expect(adminOffers.total).toBe(2);
+    expect(adminOffers.page).toBe(1);
+    expect(adminOffers.limit).toBe(1);
+    expect(adminOffers.items[0]?.title).toContain("Cox's Bazar");
+    expect(adminOffers.items[0]?.status).toBe(OfferStatus.PUBLISHED);
+  });
+
   it('normal user cannot access admin offer routes', async () => {
     await authController.authenticateWithEmail({
       email: 'traveler@example.com',
@@ -179,5 +238,38 @@ describe('OffersController (integration)', () => {
 
     expect(publicOffer.id).toBe(createdOffer.id);
     expect(publicOffer.slug).toBe(createdOffer.slug);
+  });
+
+  it('admin can delete an offer and it disappears from admin and public reads', async () => {
+    const createdOffer = await adminOffersController.createOffer({
+      title: 'Bandarban Adventure Tour',
+      summary: 'A guided hill and nature package.',
+      description:
+        'Four days and three nights in Bandarban with local sightseeing included.',
+      destination: 'Bandarban',
+      durationNights: 3,
+      price: 18000,
+      currency: 'BDT',
+      imageUrls: ['https://example.com/bandarban-1.jpg'],
+      contactWhatsApp: '+8801700000000',
+      status: OfferStatus.PUBLISHED,
+    });
+
+    await adminOffersController.deleteOffer(createdOffer.id);
+
+    const adminOffers = await adminOffersController.getAdminOffers({
+      page: 1,
+      limit: 10,
+    });
+
+    expect(
+      adminOffers.items.some((offer) => offer.id === createdOffer.id),
+    ).toBe(false);
+    await expect(
+      adminOffersController.getAdminOfferById(createdOffer.id),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      publicOffersController.getPublishedOfferBySlug(createdOffer.slug),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

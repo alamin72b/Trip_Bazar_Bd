@@ -1,15 +1,20 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -18,6 +23,8 @@ import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UserRole } from '../users/enums/user-role.enum';
+import { AdminOfferListQueryDto } from './dto/admin-offer-list-query.dto';
+import { AdminOfferListResponseDto } from './dto/admin-offer-list-response.dto';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { OfferResponseDto } from './dto/offer-response.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
@@ -49,11 +56,12 @@ export class AdminOffersController {
 
   @Get()
   @ApiOkResponse({
-    type: OfferResponseDto,
-    isArray: true,
+    type: AdminOfferListResponseDto,
   })
-  getAdminOffers(): Promise<OfferResponseDto[]> {
-    return this.offersService.getAdminOffers();
+  getAdminOffers(
+    @Query() query: AdminOfferListQueryDto,
+  ): Promise<AdminOfferListResponseDto> {
+    return this.offersService.getAdminOffers(query);
   }
 
   @Get(':id')
@@ -73,5 +81,14 @@ export class AdminOffersController {
     @Body() updateOfferDto: UpdateOfferDto,
   ): Promise<OfferResponseDto> {
     return this.offersService.updateOffer(id, updateOfferDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse({
+    description: 'Returned when the offer is deleted successfully.',
+  })
+  deleteOffer(@Param('id') id: string): Promise<void> {
+    return this.offersService.deleteOffer(id);
   }
 }

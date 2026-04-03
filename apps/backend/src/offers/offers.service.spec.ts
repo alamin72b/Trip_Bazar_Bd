@@ -10,9 +10,11 @@ describe('OffersService', () => {
   let offersService: OffersService;
   let offersRepository: {
     find: jest.Mock;
+    findAndCount: jest.Mock;
     findOne: jest.Mock;
     create: jest.Mock;
     save: jest.Mock;
+    delete: jest.Mock;
   };
 
   const baseOffer = {
@@ -41,9 +43,11 @@ describe('OffersService', () => {
           provide: getRepositoryToken(Offer),
           useValue: {
             find: jest.fn(),
+            findAndCount: jest.fn(),
             findOne: jest.fn(),
             create: jest.fn((value) => value),
             save: jest.fn(),
+            delete: jest.fn(),
           } satisfies Partial<Repository<Offer>>,
         },
       ],
@@ -84,6 +88,79 @@ describe('OffersService', () => {
     expect(response.currency).toBe('BDT');
   });
 
+  it('returns paginated admin offers with metadata and filters', async () => {
+    offersRepository.findAndCount.mockResolvedValue([[baseOffer], 3]);
+
+    const response = await offersService.getAdminOffers({
+      status: OfferStatus.PUBLISHED,
+      page: 2,
+      limit: 1,
+    });
+
+    expect(response).toEqual({
+      items: [
+        {
+          ...baseOffer,
+          createdAt: baseOffer.createdAt.toISOString(),
+          updatedAt: baseOffer.updatedAt.toISOString(),
+        },
+      ],
+      total: 3,
+      page: 2,
+      limit: 1,
+    });
+    expect(offersRepository.findAndCount).toHaveBeenCalledWith({
+      where: {
+        status: OfferStatus.PUBLISHED,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      skip: 1,
+      take: 1,
+    });
+  });
+
+  it('adds text search filters for the admin list', async () => {
+    offersRepository.findAndCount.mockResolvedValue([[], 0]);
+
+    await offersService.getAdminOffers({
+      status: OfferStatus.PUBLISHED,
+      search: " Cox's ",
+      page: 1,
+      limit: 10,
+    });
+
+    const findCall = offersRepository.findAndCount.mock.calls[0] as [unknown];
+    const options = findCall[0] as { where: Array<Record<string, unknown>> };
+
+    expect(options.where).toHaveLength(4);
+    expect(options.where[0]).toMatchObject({
+      status: OfferStatus.PUBLISHED,
+    });
+    expect(options.where[0]).toHaveProperty('title');
+    expect(options.where[1]).toHaveProperty('destination');
+    expect(options.where[2]).toHaveProperty('summary');
+    expect(options.where[3]).toHaveProperty('slug');
+  });
+
+  it('ignores blank search input for the admin list', async () => {
+    offersRepository.findAndCount.mockResolvedValue([[], 0]);
+
+    await offersService.getAdminOffers({
+      search: '   ',
+    });
+
+    expect(offersRepository.findAndCount).toHaveBeenCalledWith({
+      where: undefined,
+      order: {
+        createdAt: 'DESC',
+      },
+      skip: 0,
+      take: 10,
+    });
+  });
+
   it('returns only published offers for the public list', async () => {
     offersRepository.find.mockResolvedValue([
       baseOffer,
@@ -118,5 +195,26 @@ describe('OffersService', () => {
     await expect(
       offersService.getPublishedOfferBySlug('missing-offer'),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('deletes an offer when it exists', async () => {
+    offersRepository.delete.mockResolvedValue({
+      affected: 1,
+    });
+
+    await expect(offersService.deleteOffer(baseOffer.id)).resolves.toBeUndefined();
+    expect(offersRepository.delete).toHaveBeenCalledWith({
+      id: baseOffer.id,
+    });
+  });
+
+  it('throws 404 when deleting a missing offer', async () => {
+    offersRepository.delete.mockResolvedValue({
+      affected: 0,
+    });
+
+    await expect(offersService.deleteOffer('missing-offer')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });
