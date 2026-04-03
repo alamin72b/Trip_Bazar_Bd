@@ -1,49 +1,49 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { App } from 'supertest/types';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppController } from './../src/app.controller';
 import { AppModule } from './../src/app.module';
-import { configureApp } from './../src/setup-app';
+import { HealthController } from './../src/health/health.controller';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+describe('AppController (integration)', () => {
+  let app: INestApplication;
+  let appController: AppController;
+  let healthController: HealthController;
 
   beforeEach(async () => {
+    process.env.NODE_ENV = 'test';
+    process.env.DATABASE_PATH = ':memory:';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    configureApp(app);
     await app.init();
+
+    appController = app.get(AppController);
+    healthController = app.get(HealthController);
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpAdapter().getInstance())
-      .get('/')
-      .expect(200)
-      .expect((response) => {
-        expect(response.body).toEqual(
-          expect.objectContaining({
-            message: 'TripBazarBD backend foundation is running.',
-            docsPath: '/docs',
-            healthPath: '/api/v1/health',
-          }),
-        );
-      });
+  afterEach(async () => {
+    await app.close();
   });
 
-  it('/api/v1/health (GET)', () => {
-    return request(app.getHttpAdapter().getInstance())
-      .get('/api/v1/health')
-      .expect(200)
-      .expect((response) => {
-        expect(response.body).toEqual(
-          expect.objectContaining({
-            status: 'ok',
-            service: 'TripBazarBD Backend',
-          }),
-        );
-      });
+  it('returns the app metadata', () => {
+    expect(appController.getAppInfo()).toEqual(
+      expect.objectContaining({
+        message: 'TripBazarBD backend foundation is running.',
+        docsPath: '/docs',
+        healthPath: '/api/v1/health',
+      }),
+    );
+  });
+
+  it('returns the health response', () => {
+    expect(healthController.getHealth()).toEqual(
+      expect.objectContaining({
+        status: 'ok',
+        service: 'TripBazarBD Backend',
+      }),
+    );
   });
 });

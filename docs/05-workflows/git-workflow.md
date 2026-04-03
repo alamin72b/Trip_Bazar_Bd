@@ -58,15 +58,50 @@ Examples:
 3. Write or update the Technical Spec.
 4. Identify affected modules, request flow, and data flow.
 5. Explain the plan before implementation.
-6. Build the feature in small focused commits.
-7. Update related docs.
-8. Push the branch and open a pull request into `develop`.
+6. During planning, suggest any relevant Codex skills, built-in features, or workflow helpers that could speed up or improve the task.
+7. Build the feature in small focused commits.
+8. Update related docs.
+9. At closeout, provide a detailed Conventional Commit message and the exact `git add`, `git commit`, and `git push` commands for the current branch.
+10. Push the branch and open a pull request into `develop`.
+
+### Planning Reminder
+When discussing implementation plans, proactively call out useful Codex capabilities when they fit the task.
+
+Examples:
+- suggest a relevant skill when the task matches one
+- suggest a GitHub or workflow helper when PR, review, or CI work is involved
+- suggest built-in verification steps such as tests, builds, or documentation updates when they should be part of the plan
 
 ### For Release Promotion
 1. Confirm `develop` is in a stable state.
 2. Review the integrated changes.
 3. Merge `develop` into `main`.
 4. Tag or document the milestone if needed.
+
+### Project Merge Helper
+
+TripBazarBD also includes a project-local helper for merging the current task branch into `develop`.
+
+Use it when:
+- the current branch is a normal task branch
+- the working tree is clean
+- you want a guarded local merge flow with validation and push confirmation
+
+Command:
+
+```bash
+bash scripts/merge-into-develop.sh
+```
+
+The helper:
+- reads the current branch automatically
+- refuses `main`, `develop`, and unsupported branch names
+- updates local `develop` from `origin`
+- merges the current task branch into `develop`
+- runs safe validation commands when available
+- asks before pushing `develop`
+
+See [merge-into-develop-helper.md](./merge-into-develop-helper.md) for the full workflow.
 
 ## 4. Conventional Commit Format
 
@@ -127,9 +162,61 @@ git add AGENTS.md docs/00-templates/ADR_TEMPLATE.md docs/00-templates/TECH_SPEC_
 git commit -m "docs(workflow): standardize repository templates and git process"
 ```
 
+### Write A Detailed Commit Message
+Use the first line as the Conventional Commit summary.
+
+Use additional `-m` blocks for a short body when the task is larger and you want the commit history to explain the main changes clearly.
+
+Example:
+
+```bash
+git commit \
+  -m "feat(auth): add email/password auth foundation" \
+  -m "- add auth module with combined signup-or-login endpoint
+- add refresh token rotation and current-user endpoint
+- add shared users model and refresh token persistence
+- add tests and supporting technical documentation"
+```
+
+Recommended body style:
+- one bullet per major change area
+- keep each bullet short and factual
+- mention behavior or module changes, not tiny file-by-file details
+- include docs or tests if they were part of the task
+
+### Finish The Current Task Branch
+Use this sequence when the implementation is done and tests pass:
+
+```bash
+git status
+git add apps/backend docs
+git commit \
+  -m "feat(scope): short summary" \
+  -m "- main change 1
+- main change 2
+- tests and docs updates"
+git push -u origin <current-branch>
+```
+
+For the current branch, replace the placeholders with the real scope, summary, and branch name.
+
+### Closeout Expectation
+After implementation, the task closeout should include:
+- what changed
+- what was verified
+- a detailed Conventional Commit message
+- exact `git add`, `git commit`, and `git push` commands for the current branch
+
+This should be provided proactively so the user does not need to ask for Git commands again after each task.
+
 ### Push Branch
 ```bash
 git push -u origin docs/project-workflow
+```
+
+### Merge Current Task Branch Into `develop`
+```bash
+bash scripts/merge-into-develop.sh
 ```
 
 ## 7. Why This Workflow Fits TripBazarBD

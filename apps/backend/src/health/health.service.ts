@@ -9,7 +9,10 @@ export class HealthService {
   getHealth(): HealthResponseDto {
     return {
       status: 'ok',
-      service: this.configService.get<string>('app.name', 'TripBazarBD Backend'),
+      service: this.configService.get<string>(
+        'app.name',
+        'TripBazarBD Backend',
+      ),
       environment: this.configService.get<string>('app.nodeEnv', 'development'),
       timestamp: new Date().toISOString(),
       uptimeSeconds: Number(process.uptime().toFixed(2)),

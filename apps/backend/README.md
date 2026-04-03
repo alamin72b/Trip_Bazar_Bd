@@ -16,6 +16,13 @@ It is built with NestJS and currently provides the technical base for future mod
 - Swagger documentation
 - health endpoint
 - basic application metadata endpoint
+- SQLite-backed user persistence through TypeORM
+- email/password auth with JWT access and rotating refresh tokens
+- authenticated current-user endpoint
+- admin bootstrap from environment variables
+- admin-only proof endpoint with role guard protection
+- offer persistence with admin management and public browsing routes
+- review persistence with authenticated creation and public listing routes
 
 ## Project Setup
 ```bash
@@ -27,9 +34,32 @@ npm install
 npm run start:dev
 ```
 
+## Environment Setup
+Create a local env file from the example if you want to override defaults:
+
+```bash
+cp .env.example .env
+```
+
+Important auth variables:
+- `DATABASE_PATH`
+- `JWT_ACCESS_TOKEN_SECRET`
+- `JWT_ACCESS_TOKEN_EXPIRES_IN`
+- `JWT_REFRESH_TOKEN_SECRET`
+- `JWT_REFRESH_TOKEN_EXPIRES_IN`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+
 ## Verify The Backend
 - App info: `http://localhost:3000/`
 - Health check: `http://localhost:3000/api/v1/health`
+- Auth email endpoint: `POST http://localhost:3000/api/v1/auth/email`
+- Auth refresh endpoint: `POST http://localhost:3000/api/v1/auth/refresh`
+- Current user endpoint: `GET http://localhost:3000/api/v1/auth/me`
+- Admin proof endpoint: `GET http://localhost:3000/api/v1/admin/ping`
+- Admin offers endpoint: `GET http://localhost:3000/api/v1/admin/offers`
+- Public offers endpoint: `GET http://localhost:3000/api/v1/offers`
+- Offer reviews endpoint: `GET http://localhost:3000/api/v1/offers/:offerId/reviews`
 - Swagger docs: `http://localhost:3000/docs`
 
 ## Run Tests
@@ -39,7 +69,6 @@ npm run test:e2e
 ```
 
 ## Next Planned Modules
-- offers
-- auth
-- reviews
-- users
+- admin-only management flows on top of the shared users model
+- review moderation and offer rating aggregation
+- richer offer browsing features such as filters and pagination

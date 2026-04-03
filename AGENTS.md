@@ -14,6 +14,8 @@
 - Explain important coding choices in simple language.
 - Do not mix unrelated work in one task.
 - Do not delete files unless clearly requested.
+- During planning, proactively suggest any relevant Codex skills, built-in features, or workflow helpers that could improve the task or reduce manual work.
+- After implementation, proactively provide a detailed Conventional Commit message plus the exact `git add`, `git commit`, and `git push` commands for the current task branch.
 
 ## Backend Standards
 - Use TypeScript and clean NestJS module structure.
@@ -55,3 +57,4 @@
 - Run and test steps are explained.
 - Related docs are updated.
 - A Conventional Commit message is suggested.
+- The closeout should include detailed Git commit and push commands unless the user explicitly does not want them.
