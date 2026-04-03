@@ -58,9 +58,18 @@ Examples:
 3. Write or update the Technical Spec.
 4. Identify affected modules, request flow, and data flow.
 5. Explain the plan before implementation.
-6. Build the feature in small focused commits.
-7. Update related docs.
-8. Push the branch and open a pull request into `develop`.
+6. During planning, suggest any relevant Codex skills, built-in features, or workflow helpers that could speed up or improve the task.
+7. Build the feature in small focused commits.
+8. Update related docs.
+9. Push the branch and open a pull request into `develop`.
+
+### Planning Reminder
+When discussing implementation plans, proactively call out useful Codex capabilities when they fit the task.
+
+Examples:
+- suggest a relevant skill when the task matches one
+- suggest a GitHub or workflow helper when PR, review, or CI work is involved
+- suggest built-in verification steps such as tests, builds, or documentation updates when they should be part of the plan
 
 ### For Release Promotion
 1. Confirm `develop` is in a stable state.

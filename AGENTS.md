@@ -14,6 +14,7 @@
 - Explain important coding choices in simple language.
 - Do not mix unrelated work in one task.
 - Do not delete files unless clearly requested.
+- During planning, proactively suggest any relevant Codex skills, built-in features, or workflow helpers that could improve the task or reduce manual work.
 
 ## Backend Standards
 - Use TypeScript and clean NestJS module structure.
