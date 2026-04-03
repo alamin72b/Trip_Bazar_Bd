@@ -127,6 +127,44 @@ git add AGENTS.md docs/00-templates/ADR_TEMPLATE.md docs/00-templates/TECH_SPEC_
 git commit -m "docs(workflow): standardize repository templates and git process"
 ```
 
+### Write A Detailed Commit Message
+Use the first line as the Conventional Commit summary.
+
+Use additional `-m` blocks for a short body when the task is larger and you want the commit history to explain the main changes clearly.
+
+Example:
+
+```bash
+git commit \
+  -m "feat(auth): add email/password auth foundation" \
+  -m "- add auth module with combined signup-or-login endpoint
+- add refresh token rotation and current-user endpoint
+- add shared users model and refresh token persistence
+- add tests and supporting technical documentation"
+```
+
+Recommended body style:
+- one bullet per major change area
+- keep each bullet short and factual
+- mention behavior or module changes, not tiny file-by-file details
+- include docs or tests if they were part of the task
+
+### Finish The Current Task Branch
+Use this sequence when the implementation is done and tests pass:
+
+```bash
+git status
+git add apps/backend docs
+git commit \
+  -m "feat(scope): short summary" \
+  -m "- main change 1
+- main change 2
+- tests and docs updates"
+git push -u origin <current-branch>
+```
+
+For the current branch, replace the placeholders with the real scope, summary, and branch name.
+
 ### Push Branch
 ```bash
 git push -u origin docs/project-workflow

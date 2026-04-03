@@ -45,4 +45,12 @@ export class UsersService {
       },
     });
   }
+
+  async countUsersByRole(role: UserRole): Promise<number> {
+    return this.usersRepository.count({
+      where: {
+        role,
+      },
+    });
+  }
 }

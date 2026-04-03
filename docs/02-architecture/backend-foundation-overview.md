@@ -20,6 +20,8 @@ This gives the repository a cleaner multi-app layout and makes it easier to add 
   - owns user persistence and user lookup logic
 - `AuthModule`
   - owns auth orchestration, JWT handling, refresh-token rotation, and current-user retrieval
+- `AdminModule`
+  - owns startup admin bootstrap and admin-only proof routes
 - `HealthModule`
   - first non-business module
   - provides a simple health endpoint for runtime verification
@@ -49,6 +51,8 @@ Application bootstrap is responsible for:
   - rotates refresh tokens and issues a new token pair
 - Current-user endpoint `/api/v1/auth/me`
   - returns the authenticated user profile
+- Admin proof endpoint `/api/v1/admin/ping`
+  - verifies admin-only authorization wiring
 - Swagger endpoint `/docs`
   - documents the current API contract
 
@@ -66,7 +70,6 @@ Application bootstrap is responsible for:
 `auth` and `users` now exist as the first real business modules.
 
 Future work should build on this base by adding:
-- role-based authorization
 - admin-only management flows
 - offers and reviews business modules
 

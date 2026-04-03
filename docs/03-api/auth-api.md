@@ -95,3 +95,4 @@ Authorization: Bearer <access-token>
 - `passwordHash` is never returned
 - newly created accounts default to role `user`
 - admin account creation is not part of this flow
+- admin-only route protection is documented separately in `docs/03-api/admin-api.md`

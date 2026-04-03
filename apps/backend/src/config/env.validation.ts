@@ -55,6 +55,14 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   JWT_REFRESH_TOKEN_EXPIRES_IN?: string;
+
+  @IsOptional()
+  @IsString()
+  ADMIN_EMAIL?: string;
+
+  @IsOptional()
+  @IsString()
+  ADMIN_PASSWORD?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
@@ -71,6 +79,8 @@ export function validateEnv(config: Record<string, unknown>) {
     JWT_ACCESS_TOKEN_EXPIRES_IN: '15m',
     JWT_REFRESH_TOKEN_SECRET: 'tripbazarbd-dev-refresh-secret',
     JWT_REFRESH_TOKEN_EXPIRES_IN: '7d',
+    ADMIN_EMAIL: '',
+    ADMIN_PASSWORD: '',
     ...config,
   };
 

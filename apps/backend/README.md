@@ -19,6 +19,8 @@ It is built with NestJS and currently provides the technical base for future mod
 - SQLite-backed user persistence through TypeORM
 - email/password auth with JWT access and rotating refresh tokens
 - authenticated current-user endpoint
+- admin bootstrap from environment variables
+- admin-only proof endpoint with role guard protection
 
 ## Project Setup
 ```bash
@@ -43,6 +45,8 @@ Important auth variables:
 - `JWT_ACCESS_TOKEN_EXPIRES_IN`
 - `JWT_REFRESH_TOKEN_SECRET`
 - `JWT_REFRESH_TOKEN_EXPIRES_IN`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
 
 ## Verify The Backend
 - App info: `http://localhost:3000/`
@@ -50,6 +54,7 @@ Important auth variables:
 - Auth email endpoint: `POST http://localhost:3000/api/v1/auth/email`
 - Auth refresh endpoint: `POST http://localhost:3000/api/v1/auth/refresh`
 - Current user endpoint: `GET http://localhost:3000/api/v1/auth/me`
+- Admin proof endpoint: `GET http://localhost:3000/api/v1/admin/ping`
 - Swagger docs: `http://localhost:3000/docs`
 
 ## Run Tests
@@ -61,4 +66,4 @@ npm run test:e2e
 ## Next Planned Modules
 - offers
 - reviews
-- role-based authorization on top of the shared users model
+- admin-only management flows on top of the shared users model
