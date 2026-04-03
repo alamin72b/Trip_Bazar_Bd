@@ -22,6 +22,12 @@ Recommended variables:
 ## Run
 
 ```bash
+node -v
+```
+
+Use Node 22 LTS for local development. The app is tested against the current Next.js 15 toolchain on Node 20.9 through Node 22, and Node 24 may crash during `next dev` or `next build` on some Linux setups.
+
+```bash
 npm install
 npm run dev
 ```
