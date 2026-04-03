@@ -4,6 +4,8 @@ This helper gives TripBazarBD a repeatable local workflow for merging a finished
 
 It is a project-local starter version. Later, the same workflow can be promoted into a reusable Codex skill if the team keeps using it.
 
+The repository also includes a modular project-local skill entry under [project-skills/merge-into-develop/SKILL.md](/home/al-amin72b/Desktop/Trip_Bazar_Bd/project-skills/merge-into-develop/SKILL.md). That skill-like structure keeps the Codex workflow instructions in the repo while the shell script remains the deterministic execution path.
+
 ## 1. When To Use It
 
 Use the helper when:
