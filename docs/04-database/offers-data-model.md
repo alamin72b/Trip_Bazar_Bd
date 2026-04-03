@@ -6,6 +6,8 @@ The offers foundation introduces one new persistence model:
 
 The first version intentionally stores image URLs directly on the offer record to keep the model simple and beginner-friendly.
 
+In the admin dashboard, those URLs are now typically created through local backend image upload rather than manual URL entry.
+
 ## Offers Table
 
 ### Fields
@@ -40,8 +42,10 @@ The first version intentionally stores image URLs directly on the offer record t
 
 ## Notes
 - public detail uses `slug`, not internal `id`
+- admin UI generates `slug` automatically from the title by default
 - drafts are stored normally but hidden from public routes
 - admin routes can view both drafts and published offers
+- uploaded offer media is stored locally on the backend in v1, but the offer still stores only public image URLs
 
 ## Indexes
 - unique index on `offers.slug`

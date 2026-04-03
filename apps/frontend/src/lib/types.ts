@@ -71,7 +71,6 @@ export interface AdminUser {
 
 export interface AdminOfferInput {
   title: string;
-  slug?: string;
   summary: string;
   description: string;
   destination: string;
@@ -90,4 +89,9 @@ export interface AdminReviewUpdateInput {
 export interface AdminUserUpdateInput {
   role?: UserRole;
   isActive?: boolean;
+}
+
+export interface AdminUploadedImage {
+  filename: string;
+  url: string;
 }

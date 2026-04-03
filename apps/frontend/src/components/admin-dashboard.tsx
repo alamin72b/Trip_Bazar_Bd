@@ -1,8 +1,16 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import {
+  type DragEvent,
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   ApiError,
   createAdminOffer,
@@ -16,10 +24,12 @@ import {
   updateAdminOffer,
   updateAdminReview,
   updateAdminUser,
+  uploadAdminOfferImages,
 } from '@/lib/api';
 import type {
   AdminOfferInput,
   AdminReview,
+  AdminUploadedImage,
   AdminUser,
   Offer,
   OfferStatus,
@@ -29,9 +39,13 @@ import { useAuth } from './auth-provider';
 
 type AdminSection = 'offers' | 'reviews' | 'users';
 
+interface OfferImageState {
+  filename: string;
+  url: string;
+}
+
 interface OfferFormState {
   title: string;
-  slug: string;
   summary: string;
   description: string;
   destination: string;
@@ -39,13 +53,12 @@ interface OfferFormState {
   price: string;
   currency: string;
   status: OfferStatus;
-  imageUrls: string;
+  images: OfferImageState[];
   contactWhatsApp: string;
 }
 
 const defaultOfferFormState: OfferFormState = {
   title: '',
-  slug: '',
   summary: '',
   description: '',
   destination: '',
@@ -53,14 +66,31 @@ const defaultOfferFormState: OfferFormState = {
   price: '0',
   currency: 'BDT',
   status: 'draft',
-  imageUrls: '',
+  images: [],
   contactWhatsApp: '+8801700000000',
 };
+
+function deriveFilenameFromUrl(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const segments = pathname.split('/').filter(Boolean);
+
+    return decodeURIComponent(segments.at(-1) ?? 'offer-image');
+  } catch {
+    return 'offer-image';
+  }
+}
+
+function mapUploadedImageToState(image: AdminUploadedImage): OfferImageState {
+  return {
+    filename: image.filename,
+    url: image.url,
+  };
+}
 
 function mapOfferToFormState(offer: Offer): OfferFormState {
   return {
     title: offer.title,
-    slug: offer.slug,
     summary: offer.summary,
     description: offer.description,
     destination: offer.destination,
@@ -68,24 +98,21 @@ function mapOfferToFormState(offer: Offer): OfferFormState {
     price: String(offer.price),
     currency: offer.currency,
     status: offer.status,
-    imageUrls: offer.imageUrls.join('\n'),
+    images: offer.imageUrls.map((url) => ({
+      url,
+      filename: deriveFilenameFromUrl(url),
+    })),
     contactWhatsApp: offer.contactWhatsApp,
   };
 }
 
 function toOfferPayload(values: OfferFormState): AdminOfferInput {
-  const imageUrls = values.imageUrls
-    .split('\n')
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  if (imageUrls.length === 0) {
-    throw new Error('Provide at least one image URL.');
+  if (values.images.length === 0) {
+    throw new Error('Upload at least one image before saving the offer.');
   }
 
   return {
     title: values.title.trim(),
-    slug: values.slug.trim() || undefined,
     summary: values.summary.trim(),
     description: values.description.trim(),
     destination: values.destination.trim(),
@@ -93,7 +120,7 @@ function toOfferPayload(values: OfferFormState): AdminOfferInput {
     price: Number(values.price),
     currency: values.currency.trim().toUpperCase(),
     status: values.status,
-    imageUrls,
+    imageUrls: values.images.map((image) => image.url),
     contactWhatsApp: values.contactWhatsApp.trim(),
   };
 }
@@ -104,6 +131,7 @@ function getErrorMessage(error: unknown): string {
 
 export function AdminDashboard() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { accessToken, refreshSession, status, user } = useAuth();
   const [activeSection, setActiveSection] = useState<AdminSection>('offers');
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -116,7 +144,10 @@ export function AdminDashboard() {
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [offerForm, setOfferForm] = useState<OfferFormState>(defaultOfferFormState);
   const [offerFormError, setOfferFormError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isOfferSubmitting, setIsOfferSubmitting] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
   const [pendingActionKey, setPendingActionKey] = useState<string | null>(null);
 
   const runAdminTask = useCallback(
@@ -211,7 +242,47 @@ export function AdminDashboard() {
     setSelectedOfferId(null);
     setOfferForm(defaultOfferFormState);
     setOfferFormError(null);
+    setUploadError(null);
+    setIsDragActive(false);
   }
+
+  function removeOfferImage(url: string) {
+    setOfferForm((current) => ({
+      ...current,
+      images: current.images.filter((image) => image.url !== url),
+    }));
+  }
+
+  const uploadFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) {
+        return;
+      }
+
+      setUploadError(null);
+      setOfferFormError(null);
+      setIsUploadingImages(true);
+
+      try {
+        const uploadedImages = await runAdminTask((token) =>
+          uploadAdminOfferImages(token, files),
+        );
+
+        setOfferForm((current) => ({
+          ...current,
+          images: [
+            ...current.images,
+            ...uploadedImages.map(mapUploadedImageToState),
+          ],
+        }));
+      } catch (error) {
+        setUploadError(getErrorMessage(error));
+      } finally {
+        setIsUploadingImages(false);
+      }
+    },
+    [runAdminTask],
+  );
 
   async function handleOfferSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -334,6 +405,20 @@ export function AdminDashboard() {
     } finally {
       setPendingActionKey(null);
     }
+  }
+
+  function handleDragState(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  async function handleDrop(event: DragEvent<HTMLDivElement>) {
+    handleDragState(event);
+    setIsDragActive(false);
+
+    const files = Array.from(event.dataTransfer.files);
+
+    await uploadFiles(files);
   }
 
   const publishedOfferCount = offers.filter(
@@ -497,6 +582,7 @@ export function AdminDashboard() {
                           setSelectedOfferId(offer.id);
                           setOfferForm(mapOfferToFormState(offer));
                           setOfferFormError(null);
+                          setUploadError(null);
                         }}
                         type="button"
                       >
@@ -562,14 +648,13 @@ export function AdminDashboard() {
                   value={offerForm.title}
                 />
               </label>
-              <label className="field">
+              <div className="field admin-field-note">
                 <span>Slug</span>
-                <input
-                  onChange={(event) => updateOfferForm('slug', event.target.value)}
-                  placeholder="optional-custom-slug"
-                  value={offerForm.slug}
-                />
-              </label>
+                <div className="admin-note-box">
+                  The backend creates the public slug automatically from the
+                  title.
+                </div>
+              </div>
               <label className="field">
                 <span>Destination</span>
                 <input
@@ -662,26 +747,104 @@ export function AdminDashboard() {
               />
             </label>
 
-            <label className="field">
-              <span>Image URLs</span>
-              <textarea
-                onChange={(event) =>
-                  updateOfferForm('imageUrls', event.target.value)
-                }
-                placeholder={
-                  'https://example.com/image-1.jpg\nhttps://example.com/image-2.jpg'
-                }
-                required
-                rows={4}
-                value={offerForm.imageUrls}
+            <div className="field">
+              <span>Offer images</span>
+              <input
+                accept="image/jpeg,image/png,image/webp"
+                className="admin-image-input"
+                multiple
+                onChange={(event) => {
+                  const files = Array.from(event.target.files ?? []);
+                  event.target.value = '';
+                  void uploadFiles(files);
+                }}
+                ref={fileInputRef}
+                type="file"
               />
-            </label>
+              <div
+                className={`admin-upload-dropzone ${
+                  isDragActive ? 'admin-upload-dropzone--active' : ''
+                }`}
+                onClick={() => fileInputRef.current?.click()}
+                onDragEnter={(event) => {
+                  handleDragState(event);
+                  setIsDragActive(true);
+                }}
+                onDragLeave={(event) => {
+                  handleDragState(event);
+                  setIsDragActive(false);
+                }}
+                onDragOver={handleDragState}
+                onDrop={(event) => {
+                  void handleDrop(event);
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+              >
+                <p className="admin-upload-dropzone__title">
+                  Drag and drop JPG, PNG, or WebP images here
+                </p>
+                <p className="muted-copy">
+                  Or click to choose files. You can upload up to 6 images, each
+                  up to 5 MB.
+                </p>
+                <button
+                  className="button button-secondary"
+                  disabled={isUploadingImages}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    fileInputRef.current?.click();
+                  }}
+                  type="button"
+                >
+                  {isUploadingImages ? 'Uploading images...' : 'Choose images'}
+                </button>
+              </div>
+            </div>
 
+            {offerForm.images.length > 0 ? (
+              <div className="admin-image-grid">
+                {offerForm.images.map((image) => (
+                  <article className="admin-image-card" key={image.url}>
+                    <Image
+                      alt={image.filename}
+                      className="admin-image-card__preview"
+                      height={240}
+                      src={image.url}
+                      unoptimized
+                      width={320}
+                    />
+                    <div className="admin-image-card__footer">
+                      <p>{image.filename}</p>
+                      <button
+                        className="button button-secondary"
+                        onClick={() => removeOfferImage(image.url)}
+                        type="button"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="empty-state">
+                No images added yet. Upload at least one image before saving.
+              </p>
+            )}
+
+            {uploadError ? <p className="form-error">{uploadError}</p> : null}
             {offerFormError ? <p className="form-error">{offerFormError}</p> : null}
 
             <button
               className="button button-primary button-full"
-              disabled={isOfferSubmitting}
+              disabled={isOfferSubmitting || isUploadingImages}
               type="submit"
             >
               {isOfferSubmitting

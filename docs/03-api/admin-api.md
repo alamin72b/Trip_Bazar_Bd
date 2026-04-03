@@ -4,6 +4,7 @@
 The admin dashboard foundation exposes protected admin endpoints for:
 - admin proof
 - offer management
+- image upload for offers
 - review moderation
 - user management
 
@@ -40,16 +41,45 @@ The caller must also have the `admin` role.
 
 ### POST /api/v1/admin/offers
 - create a new offer using the same DTO shape as the backend offer module
+- `slug` remains optional in the backend contract and is generated automatically from `title` in the admin UI flow
 
 ### GET /api/v1/admin/offers/:id
 - fetch one offer by internal ID
 
 ### PATCH /api/v1/admin/offers/:id
 - update one offer by internal ID
+- if the title changes and no explicit slug is supplied, the backend regenerates the slug from the current title
 
 ### DELETE /api/v1/admin/offers/:id
 - delete one offer permanently
 - success response: `204 No Content`
+
+## Admin Offer Uploads
+
+### POST /api/v1/admin/uploads/images
+- upload one or more offer images for use in `imageUrls`
+- supported mime types:
+  - `image/jpeg`
+  - `image/png`
+  - `image/webp`
+- limits:
+  - up to 6 images per request
+  - up to 5 MB per image
+
+Success response:
+```json
+[
+  {
+    "filename": "uuid.jpg",
+    "url": "http://localhost:3000/uploads/offers/uuid.jpg"
+  }
+]
+```
+
+Notes:
+- files are stored on the backend server in local storage for v1
+- the returned `url` is what the admin dashboard saves into `imageUrls`
+- public offer pages continue reading `imageUrls` normally
 
 ## Admin Reviews
 

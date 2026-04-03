@@ -10,15 +10,15 @@ import {
 } from '@/lib/api';
 
 interface OfferDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function OfferDetailPage({
   params,
 }: OfferDetailPageProps) {
-  const { slug } = params;
+  const { slug } = await params;
 
   try {
     const offer = await getPublicOfferBySlug(slug);

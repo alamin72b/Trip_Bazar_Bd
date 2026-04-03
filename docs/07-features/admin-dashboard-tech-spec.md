@@ -13,6 +13,7 @@ It helps the admin team operate the platform without changing the public browsin
 - protected `/admin` route in the existing frontend app
 - admin-aware login redirect behavior
 - full admin offer CRUD including delete
+- admin offer image upload with drag-and-drop or file picker UX
 - admin review list, visibility moderation, and delete
 - admin user list, role update, and active-status update
 - API and feature documentation updates
@@ -43,6 +44,8 @@ It helps the admin team operate the platform without changing the public browsin
 - admins must land on `/admin` after successful login
 - non-admin users trying to access `/admin` must be redirected away from the admin area
 - admin dashboard must support create, list, read, update, and delete for offers
+- admin offer forms must generate slugs automatically from titles in the normal dashboard flow
+- admin offer forms must support drag-and-drop and file picker image upload
 - admin dashboard must support listing reviews, toggling review visibility, and deleting reviews
 - admin dashboard must support listing users, changing roles, and activating/deactivating accounts
 - admin updates must not expose or modify passwords
@@ -54,6 +57,8 @@ It helps the admin team operate the platform without changing the public browsin
 ### Affected Modules
 - `offers`
   - add admin delete support
+- `admin`
+  - add local image upload support for offer media
 - `reviews`
   - add admin review endpoints and moderation status handling
 - `users`
@@ -66,11 +71,15 @@ It helps the admin team operate the platform without changing the public browsin
 2. Frontend auth state restores and recognizes the `admin` role.
 3. Frontend sends the admin to `/admin`.
 4. Admin dashboard fetches admin offers, reviews, and users with the bearer access token.
-5. Backend protects each admin route with `AccessTokenGuard` and `RolesGuard`.
-6. Controllers delegate to services for CRUD and moderation logic.
+5. When an admin uploads images, the frontend sends multipart form-data to the admin upload endpoint.
+6. Backend validates image count, size, and mime type, stores the files locally, and returns public URLs.
+7. The dashboard includes those URLs in offer create or update payloads.
+8. Backend protects each admin route with `AccessTokenGuard` and `RolesGuard`.
+9. Controllers delegate to services for CRUD, upload, and moderation logic.
 
 ### Data Flow
 - offer forms submit the existing offer DTO shape from the dashboard
+- uploaded offer images are saved first and then included as `imageUrls`
 - review moderation submits only the `status` field
 - user management submits `role` and/or `isActive`
 - frontend retries admin calls after token refresh when possible
@@ -78,6 +87,7 @@ It helps the admin team operate the platform without changing the public browsin
 ### Validation Rules
 - input validation:
   - use DTO validation for offer, review status, and admin user updates
+  - validate uploaded image type, file size, and file count
 - business validation:
   - offer delete must fail for missing records
   - review moderation only accepts known enum values
@@ -98,6 +108,7 @@ It helps the admin team operate the platform without changing the public browsin
 - `GET /api/v1/admin/offers/:id`
 - `PATCH /api/v1/admin/offers/:id`
 - `DELETE /api/v1/admin/offers/:id`
+- `POST /api/v1/admin/uploads/images`
 - `GET /api/v1/admin/reviews`
 - `GET /api/v1/admin/reviews/:id`
 - `PATCH /api/v1/admin/reviews/:id`
@@ -126,12 +137,14 @@ It helps the admin team operate the platform without changing the public browsin
 ## 10. Scalability And Operational Notes
 - admin endpoints remain small and synchronous for the current platform phase
 - list endpoints are unpaginated in v1 and suitable for early internal use
+- uploaded images are stored on the backend server in local storage for the current phase
 - future growth can add pagination and filtering without changing role protection patterns
 
 ## 11. Security Considerations
 - authentication uses the existing JWT access and refresh flow
 - authorization uses the existing `RolesGuard`
 - admin-only operations remain isolated under `/admin/*`
+- offer uploads accept only JPG, PNG, and WebP images
 - user management avoids password mutation in this phase
 - self-lockout and last-admin rules reduce accidental operator lockout
 
@@ -139,21 +152,24 @@ It helps the admin team operate the platform without changing the public browsin
 
 ### Unit Tests
 - offer delete success and not-found handling
+- local image upload validation and stored URL generation
 - review moderation list/update/delete behavior
 - user role/status update rules including self-lockout protection
 
 ### Integration Tests
 - admin can create, update, and delete offers
+- admin can upload offer images and receive public URLs
 - admin can list, hide, publish, and delete reviews
 - admin can list users and change user role and active status
-- non-admin users are rejected by admin review and user routes
+- non-admin users are rejected by admin upload, review, and user routes
 
 ### Manual Test Steps
 1. Sign in with the seeded admin account.
 2. Confirm the frontend redirects to `/admin`.
-3. Create, edit, and delete an offer from the dashboard.
-4. Hide and republish a review from the dashboard.
-5. Promote or deactivate a non-admin user from the dashboard.
+3. Upload one or more offer images through drag-and-drop or file picker.
+4. Create, edit, and delete an offer from the dashboard without entering a slug.
+5. Hide and republish a review from the dashboard.
+6. Promote or deactivate a non-admin user from the dashboard.
 
 ## 13. Documentation Updates
 - API docs: expand `docs/03-api/admin-api.md`

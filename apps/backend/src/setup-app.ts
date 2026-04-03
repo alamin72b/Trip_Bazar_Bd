@@ -4,10 +4,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import fs from 'node:fs';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
-export function configureApp(app: INestApplication): void {
+export function configureApp(app: NestExpressApplication): void {
   const configService = app.get(ConfigService);
   const apiPrefix = configService.get<string>('app.apiPrefix', 'api/v1');
   const appName = configService.get<string>('app.name', 'TripBazarBD Backend');
@@ -16,8 +18,17 @@ export function configureApp(app: INestApplication): void {
     'Backend API for the TripBazarBD travel-offer platform.',
   );
   const appVersion = configService.get<string>('app.version', '1.0.0');
+  const uploadRootDir = configService.get<string>(
+    'app.uploadRootDir',
+    'uploads',
+  );
+
+  fs.mkdirSync(uploadRootDir, { recursive: true });
 
   app.enableCors();
+  app.useStaticAssets(uploadRootDir, {
+    prefix: '/uploads/',
+  });
   app.setGlobalPrefix(apiPrefix, {
     exclude: [{ path: '/', method: RequestMethod.GET }],
   });

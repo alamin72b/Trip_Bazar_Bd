@@ -2,6 +2,7 @@ import type {
   AdminOfferInput,
   AdminReview,
   AdminReviewUpdateInput,
+  AdminUploadedImage,
   AdminUser,
   AdminUserUpdateInput,
   AuthTokensResponse,
@@ -58,7 +59,9 @@ async function request<T>(
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...requestInit,
     headers: {
-      'Content-Type': 'application/json',
+      ...(requestInit.body instanceof FormData
+        ? {}
+        : { 'Content-Type': 'application/json' }),
       ...(requestInit.headers ?? {}),
     },
     cache: noStore ? 'no-store' : requestInit.cache,
@@ -183,6 +186,23 @@ export function updateAdminOffer(
     method: 'PATCH',
     headers: withAccessToken(accessToken),
     body: JSON.stringify(input),
+  });
+}
+
+export function uploadAdminOfferImages(
+  accessToken: string,
+  files: File[],
+): Promise<AdminUploadedImage[]> {
+  const formData = new FormData();
+
+  for (const file of files) {
+    formData.append('images', file);
+  }
+
+  return request<AdminUploadedImage[]>('/admin/uploads/images', {
+    method: 'POST',
+    headers: withAccessToken(accessToken),
+    body: formData,
   });
 }
 

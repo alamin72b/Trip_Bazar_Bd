@@ -4,11 +4,13 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersModule } from '../users/users.module';
 import { AdminBootstrapService } from './admin-bootstrap.service';
 import { AdminController } from './admin.controller';
+import { AdminUploadsController } from './admin-uploads.controller';
+import { AdminUploadsService } from './admin-uploads.service';
 import { AdminService } from './admin.service';
 
 @Module({
   imports: [AuthModule, UsersModule],
-  controllers: [AdminController],
-  providers: [AdminService, AdminBootstrapService, RolesGuard],
+  controllers: [AdminController, AdminUploadsController],
+  providers: [AdminService, AdminBootstrapService, AdminUploadsService, RolesGuard],
 })
 export class AdminModule {}
