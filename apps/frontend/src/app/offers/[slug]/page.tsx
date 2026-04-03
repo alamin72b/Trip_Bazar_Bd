@@ -68,7 +68,10 @@ export default async function OfferDetailPage({
               >
                 Contact on WhatsApp
               </a>
-              <Link className="button button-secondary" href="/auth?redirect=/offers">
+              <Link
+                className="button button-secondary"
+                href={`/auth?redirect=${encodeURIComponent(`/offers/${offer.slug}`)}`}
+              >
                 Sign in to review
               </Link>
             </div>
