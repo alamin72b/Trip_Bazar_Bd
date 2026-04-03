@@ -9,7 +9,9 @@ import { AuthenticatedUser } from '../common/interfaces/authenticated-user.inter
 import { OffersService } from '../offers/offers.service';
 import { UsersService } from '../users/users.service';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { AdminReviewResponseDto } from './dto/admin-review-response.dto';
 import { ReviewResponseDto } from './dto/review-response.dto';
+import { UpdateReviewStatusDto } from './dto/update-review-status.dto';
 import { Review } from './entities/review.entity';
 import { ReviewStatus } from './enums/review-status.enum';
 import { createReviewerDisplayName } from './utils/reviewer-display.util';
@@ -78,6 +80,73 @@ export class ReviewsService {
     );
   }
 
+  async getAdminReviews(): Promise<AdminReviewResponseDto[]> {
+    const reviews = await this.reviewsRepository.find({
+      relations: {
+        offer: true,
+        user: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    return reviews.map((review) => this.toAdminResponseDto(review));
+  }
+
+  async getAdminReviewById(id: string): Promise<AdminReviewResponseDto> {
+    const review = await this.findAdminReviewById(id);
+
+    if (!review) {
+      throw new NotFoundException('Review not found.');
+    }
+
+    return this.toAdminResponseDto(review);
+  }
+
+  async updateReviewStatus(
+    id: string,
+    updateReviewStatusDto: UpdateReviewStatusDto,
+  ): Promise<AdminReviewResponseDto> {
+    const review = await this.findAdminReviewById(id);
+
+    if (!review) {
+      throw new NotFoundException('Review not found.');
+    }
+
+    review.status = updateReviewStatusDto.status;
+
+    const updatedReview = await this.reviewsRepository.save(review);
+
+    return this.toAdminResponseDto(updatedReview);
+  }
+
+  async deleteReview(id: string): Promise<void> {
+    const review = await this.reviewsRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Review not found.');
+    }
+
+    await this.reviewsRepository.remove(review);
+  }
+
+  private findAdminReviewById(id: string): Promise<Review | null> {
+    return this.reviewsRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        offer: true,
+        user: true,
+      },
+    });
+  }
+
   private toResponseDto(
     review: Review,
     reviewerEmail: string,
@@ -88,6 +157,21 @@ export class ReviewsService {
       comment: review.comment,
       reviewerDisplayName: createReviewerDisplayName(reviewerEmail),
       createdAt: review.createdAt.toISOString(),
+    };
+  }
+
+  private toAdminResponseDto(review: Review): AdminReviewResponseDto {
+    return {
+      id: review.id,
+      offerId: review.offerId,
+      offerTitle: review.offer.title,
+      userId: review.userId,
+      userEmail: review.user.email,
+      rating: review.rating,
+      comment: review.comment,
+      status: review.status,
+      createdAt: review.createdAt.toISOString(),
+      updatedAt: review.updatedAt.toISOString(),
     };
   }
 }

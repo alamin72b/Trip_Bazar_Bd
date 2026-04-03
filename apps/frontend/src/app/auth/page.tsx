@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { AuthForm } from '@/components/auth-form';
 
 export default function AuthPage() {
@@ -22,7 +23,16 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <AuthForm />
+      <Suspense
+        fallback={
+          <div className="panel loading-panel">
+            <p className="eyebrow">Traveler access</p>
+            <h2 className="section-heading section-heading-sm">Preparing the auth form...</h2>
+          </div>
+        }
+      >
+        <AuthForm />
+      </Suspense>
     </div>
   );
 }

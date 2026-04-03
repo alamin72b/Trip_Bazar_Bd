@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
+import { AdminUserResponseDto } from './dto/admin-user-response.dto';
+import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
 import { User } from './entities/user.entity';
 import { UserRole } from './enums/user-role.enum';
 
@@ -52,5 +55,80 @@ export class UsersService {
         role,
       },
     });
+  }
+
+  async getAdminUsers(): Promise<AdminUserResponseDto[]> {
+    const users = await this.usersRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    return users.map((user) => this.toAdminResponseDto(user));
+  }
+
+  async getAdminUserById(id: string): Promise<AdminUserResponseDto> {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    return this.toAdminResponseDto(user);
+  }
+
+  async updateAdminUser(
+    id: string,
+    currentUser: AuthenticatedUser,
+    updateAdminUserDto: UpdateAdminUserDto,
+  ): Promise<AdminUserResponseDto> {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const nextRole = updateAdminUserDto.role ?? user.role;
+    const nextIsActive = updateAdminUserDto.isActive ?? user.isActive;
+
+    if (currentUser.sub === user.id && (nextRole !== UserRole.ADMIN || !nextIsActive)) {
+      throw new BadRequestException(
+        'Admins cannot remove their own dashboard access.',
+      );
+    }
+
+    if (
+      user.role === UserRole.ADMIN &&
+      user.isActive &&
+      (nextRole !== UserRole.ADMIN || !nextIsActive)
+    ) {
+      const activeAdminCount = await this.usersRepository.count({
+        where: {
+          role: UserRole.ADMIN,
+          isActive: true,
+        },
+      });
+
+      if (activeAdminCount <= 1) {
+        throw new BadRequestException('At least one active admin must remain.');
+      }
+    }
+
+    Object.assign(user, updateAdminUserDto);
+
+    const updatedUser = await this.usersRepository.save(user);
+
+    return this.toAdminResponseDto(updatedUser);
+  }
+
+  private toAdminResponseDto(user: User): AdminUserResponseDto {
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
   }
 }

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { AuthStatus } from './auth-status';
 
@@ -24,7 +25,13 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <AuthStatus />
+        <Suspense
+          fallback={
+            <span className="auth-pill auth-pill-muted">Checking session...</span>
+          }
+        >
+          <AuthStatus />
+        </Suspense>
       </div>
     </header>
   );

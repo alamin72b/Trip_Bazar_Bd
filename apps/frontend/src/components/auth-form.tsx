@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useAuth } from './auth-provider';
 
 export function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { loginWithEmail } = useAuth();
+  const { loginWithEmail, status, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -15,14 +15,36 @@ export function AuthForm() {
 
   const redirectPath = searchParams.get('redirect') ?? '/offers';
 
+  useEffect(() => {
+    if (status !== 'authenticated' || !user) {
+      return;
+    }
+
+    if (user.role === 'admin') {
+      router.replace('/admin');
+      return;
+    }
+
+    router.replace(
+      redirectPath.startsWith('/admin') ? '/offers' : redirectPath,
+    );
+  }, [redirectPath, router, status, user]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      await loginWithEmail(email, password);
-      router.push(redirectPath);
+      const authenticatedUser = await loginWithEmail(email, password);
+      const nextPath =
+        authenticatedUser.role === 'admin'
+          ? '/admin'
+          : redirectPath.startsWith('/admin')
+            ? '/offers'
+            : redirectPath;
+
+      router.push(nextPath);
       router.refresh();
     } catch (submitError) {
       setError(
@@ -43,7 +65,8 @@ export function AuthForm() {
       </div>
       <p className="muted-copy">
         TripBazarBD uses one email/password form for both new accounts and returning
-        users. After login, you can leave reviews on offers.
+        users. Travelers can leave reviews on offers, and admins land in the
+        dashboard after login.
       </p>
 
       <label className="field">

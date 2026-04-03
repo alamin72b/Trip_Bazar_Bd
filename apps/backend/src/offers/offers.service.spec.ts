@@ -13,6 +13,7 @@ describe('OffersService', () => {
     findOne: jest.Mock;
     create: jest.Mock;
     save: jest.Mock;
+    remove: jest.Mock;
   };
 
   const baseOffer = {
@@ -44,6 +45,7 @@ describe('OffersService', () => {
             findOne: jest.fn(),
             create: jest.fn((value) => value),
             save: jest.fn(),
+            remove: jest.fn(),
           } satisfies Partial<Repository<Offer>>,
         },
       ],
@@ -118,5 +120,21 @@ describe('OffersService', () => {
     await expect(
       offersService.getPublishedOfferBySlug('missing-offer'),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('deletes an offer when it exists', async () => {
+    offersRepository.findOne.mockResolvedValue(baseOffer);
+
+    await offersService.deleteOffer(baseOffer.id);
+
+    expect(offersRepository.remove).toHaveBeenCalledWith(baseOffer);
+  });
+
+  it('throws 404 when deleting a missing offer', async () => {
+    offersRepository.findOne.mockResolvedValue(null);
+
+    await expect(offersService.deleteOffer('missing-offer')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

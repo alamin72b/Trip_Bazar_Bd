@@ -42,6 +42,11 @@ export function AuthStatus() {
 
   return (
     <div className="auth-status-group">
+      {user?.role === 'admin' ? (
+        <Link className="auth-pill auth-pill-link" href="/admin">
+          Admin dashboard
+        </Link>
+      ) : null}
       <span className="auth-pill">{user?.email}</span>
       <button
         className="auth-pill auth-pill-button"

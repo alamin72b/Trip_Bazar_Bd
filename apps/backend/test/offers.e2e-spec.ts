@@ -109,6 +109,28 @@ describe('OffersController (integration)', () => {
     expect(updatedOffer.status).toBe(OfferStatus.PUBLISHED);
   });
 
+  it('admin can delete an offer', async () => {
+    const createdOffer = await adminOffersController.createOffer({
+      title: 'Saint Martin Weekend',
+      summary: 'A short island trip package.',
+      description:
+        'Three days and two nights in Saint Martin with hotel and transport included.',
+      destination: 'Saint Martin',
+      durationNights: 2,
+      price: 15500,
+      currency: 'BDT',
+      imageUrls: ['https://example.com/saint-martin-1.jpg'],
+      contactWhatsApp: '+8801700000000',
+      status: OfferStatus.DRAFT,
+    });
+
+    await adminOffersController.deleteOffer(createdOffer.id);
+
+    await expect(
+      adminOffersController.getAdminOfferById(createdOffer.id),
+    ).rejects.toThrow('Offer not found.');
+  });
+
   it('normal user cannot access admin offer routes', async () => {
     await authController.authenticateWithEmail({
       email: 'traveler@example.com',
