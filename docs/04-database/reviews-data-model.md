@@ -20,7 +20,7 @@ This model links authenticated users to offers they reviewed.
 - `comment`
   - review text
 - `status`
-  - enum value with `published` used in v1
+  - enum value with `published` or `hidden`
 - `createdAt`
   - creation timestamp
 - `updatedAt`
@@ -30,6 +30,7 @@ This model links authenticated users to offers they reviewed.
 - multiple reviews by the same user for the same offer are allowed in v1
 - public review routes do not expose `userId`
 - reviewer display value is derived at the service layer, not stored as a separate database field
+- admin moderation can hide a review without changing the original comment or rating payload
 
 ## Relationships
 - many `reviews` belong to one `offers` record

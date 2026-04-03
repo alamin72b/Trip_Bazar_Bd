@@ -1,4 +1,9 @@
 import type {
+  AdminOfferInput,
+  AdminReview,
+  AdminReviewUpdateInput,
+  AdminUser,
+  AdminUserUpdateInput,
   AuthTokensResponse,
   Offer,
   Review,
@@ -63,7 +68,17 @@ async function request<T>(
     throw new ApiError(await parseErrorResponse(response), response.status);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return (await response.json()) as T;
+}
+
+function withAccessToken(accessToken: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+  };
 }
 
 export function getPublicOffers(): Promise<Offer[]> {
@@ -125,8 +140,126 @@ export function createReview(
   return request<Review>(`/offers/${offerId}/reviews`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      ...withAccessToken(accessToken),
     },
+    body: JSON.stringify(input),
+  });
+}
+
+export function getAdminOffers(accessToken: string): Promise<Offer[]> {
+  return request<Offer[]>('/admin/offers', {
+    headers: withAccessToken(accessToken),
+    noStore: true,
+  });
+}
+
+export function getAdminOfferById(
+  offerId: string,
+  accessToken: string,
+): Promise<Offer> {
+  return request<Offer>(`/admin/offers/${offerId}`, {
+    headers: withAccessToken(accessToken),
+    noStore: true,
+  });
+}
+
+export function createAdminOffer(
+  accessToken: string,
+  input: AdminOfferInput,
+): Promise<Offer> {
+  return request<Offer>('/admin/offers', {
+    method: 'POST',
+    headers: withAccessToken(accessToken),
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateAdminOffer(
+  offerId: string,
+  accessToken: string,
+  input: Partial<AdminOfferInput>,
+): Promise<Offer> {
+  return request<Offer>(`/admin/offers/${offerId}`, {
+    method: 'PATCH',
+    headers: withAccessToken(accessToken),
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteAdminOffer(
+  offerId: string,
+  accessToken: string,
+): Promise<void> {
+  return request<void>(`/admin/offers/${offerId}`, {
+    method: 'DELETE',
+    headers: withAccessToken(accessToken),
+  });
+}
+
+export function getAdminReviews(accessToken: string): Promise<AdminReview[]> {
+  return request<AdminReview[]>('/admin/reviews', {
+    headers: withAccessToken(accessToken),
+    noStore: true,
+  });
+}
+
+export function getAdminReviewById(
+  reviewId: string,
+  accessToken: string,
+): Promise<AdminReview> {
+  return request<AdminReview>(`/admin/reviews/${reviewId}`, {
+    headers: withAccessToken(accessToken),
+    noStore: true,
+  });
+}
+
+export function updateAdminReview(
+  reviewId: string,
+  accessToken: string,
+  input: AdminReviewUpdateInput,
+): Promise<AdminReview> {
+  return request<AdminReview>(`/admin/reviews/${reviewId}`, {
+    method: 'PATCH',
+    headers: withAccessToken(accessToken),
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteAdminReview(
+  reviewId: string,
+  accessToken: string,
+): Promise<void> {
+  return request<void>(`/admin/reviews/${reviewId}`, {
+    method: 'DELETE',
+    headers: withAccessToken(accessToken),
+  });
+}
+
+export function getAdminUsers(accessToken: string): Promise<AdminUser[]> {
+  return request<AdminUser[]>('/admin/users', {
+    headers: withAccessToken(accessToken),
+    noStore: true,
+  });
+}
+
+export function getAdminUserById(
+  userId: string,
+  accessToken: string,
+): Promise<AdminUser> {
+  return request<AdminUser>(`/admin/users/${userId}`, {
+    headers: withAccessToken(accessToken),
+    noStore: true,
+  });
+}
+
+export function updateAdminUser(
+  userId: string,
+  accessToken: string,
+  input: AdminUserUpdateInput,
+): Promise<AdminUser> {
+  return request<AdminUser>(`/admin/users/${userId}`, {
+    method: 'PATCH',
+    headers: withAccessToken(accessToken),
     body: JSON.stringify(input),
   });
 }
@@ -144,6 +277,16 @@ export function formatReviewDate(value: string): string {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+  }).format(new Date(value));
+}
+
+export function formatDateTime(value: string): string {
+  return new Intl.DateTimeFormat('en-BD', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   }).format(new Date(value));
 }
 

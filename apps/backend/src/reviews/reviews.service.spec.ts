@@ -15,8 +15,10 @@ describe('ReviewsService', () => {
   let reviewsService: ReviewsService;
   let reviewsRepository: {
     find: jest.Mock;
+    findOne: jest.Mock;
     create: jest.Mock;
     save: jest.Mock;
+    remove: jest.Mock;
   };
   let offersService: jest.Mocked<OffersService>;
   let usersService: jest.Mocked<UsersService>;
@@ -35,8 +37,10 @@ describe('ReviewsService', () => {
           provide: getRepositoryToken(Review),
           useValue: {
             find: jest.fn(),
+            findOne: jest.fn(),
             create: jest.fn((value) => value),
             save: jest.fn(),
+            remove: jest.fn(),
           } satisfies Partial<Repository<Review>>,
         },
         {
@@ -158,5 +162,92 @@ describe('ReviewsService', () => {
   it('creates a masked reviewer display name', () => {
     expect(createReviewerDisplayName('traveler@example.com')).toBe('tra***');
     expect(createReviewerDisplayName('ab@example.com')).toBe('ab***');
+  });
+
+  it('lists all reviews for the admin dashboard with internal context', async () => {
+    reviewsRepository.find.mockResolvedValue([
+      {
+        id: 'review-1',
+        offerId: 'offer-1',
+        userId: 'user-1',
+        rating: 5,
+        comment: 'The trip was well organized and worth the price.',
+        status: ReviewStatus.HIDDEN,
+        createdAt: new Date('2026-04-03T07:00:00.000Z'),
+        updatedAt: new Date('2026-04-03T09:00:00.000Z'),
+        offer: {
+          title: "Cox's Bazar Weekend Escape",
+        },
+        user: {
+          email: 'traveler@example.com',
+        },
+      },
+    ]);
+
+    const response = await reviewsService.getAdminReviews();
+
+    expect(response).toEqual([
+      {
+        id: 'review-1',
+        offerId: 'offer-1',
+        offerTitle: "Cox's Bazar Weekend Escape",
+        userId: 'user-1',
+        userEmail: 'traveler@example.com',
+        rating: 5,
+        comment: 'The trip was well organized and worth the price.',
+        status: ReviewStatus.HIDDEN,
+        createdAt: '2026-04-03T07:00:00.000Z',
+        updatedAt: '2026-04-03T09:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('updates review status for admin moderation', async () => {
+    reviewsRepository.findOne.mockResolvedValue({
+      id: 'review-1',
+      offerId: 'offer-1',
+      userId: 'user-1',
+      rating: 5,
+      comment: 'The trip was well organized and worth the price.',
+      status: ReviewStatus.PUBLISHED,
+      createdAt: new Date('2026-04-03T07:00:00.000Z'),
+      updatedAt: new Date('2026-04-03T08:00:00.000Z'),
+      offer: {
+        title: "Cox's Bazar Weekend Escape",
+      },
+      user: {
+        email: 'traveler@example.com',
+      },
+    });
+    reviewsRepository.save.mockImplementation(async (value) => ({
+      ...value,
+      updatedAt: new Date('2026-04-03T09:00:00.000Z'),
+    }));
+
+    const response = await reviewsService.updateReviewStatus('review-1', {
+      status: ReviewStatus.HIDDEN,
+    });
+
+    expect(response.status).toBe(ReviewStatus.HIDDEN);
+  });
+
+  it('deletes a review when it exists', async () => {
+    reviewsRepository.findOne.mockResolvedValue({
+      id: 'review-1',
+    });
+
+    await reviewsService.deleteReview('review-1');
+
+    expect(reviewsRepository.remove).toHaveBeenCalledWith({
+      id: 'review-1',
+    });
+  });
+
+  it('throws 404 when deleting a missing review', async () => {
+    reviewsRepository.findOne.mockResolvedValue(null);
+
+    await expect(reviewsService.deleteReview('missing-review')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

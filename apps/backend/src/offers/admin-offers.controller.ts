@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -10,6 +12,7 @@ import {
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -73,5 +76,14 @@ export class AdminOffersController {
     @Body() updateOfferDto: UpdateOfferDto,
   ): Promise<OfferResponseDto> {
     return this.offersService.updateOffer(id, updateOfferDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @ApiNoContentResponse({
+    description: 'Returned when the offer is deleted successfully.',
+  })
+  deleteOffer(@Param('id') id: string): Promise<void> {
+    return this.offersService.deleteOffer(id);
   }
 }

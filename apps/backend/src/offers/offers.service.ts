@@ -91,6 +91,16 @@ export class OffersService {
     return this.toResponseDto(updatedOffer);
   }
 
+  async deleteOffer(id: string): Promise<void> {
+    const offer = await this.findOfferById(id);
+
+    if (!offer) {
+      throw new NotFoundException('Offer not found.');
+    }
+
+    await this.offersRepository.remove(offer);
+  }
+
   async getPublishedOffers(): Promise<OfferResponseDto[]> {
     const offers = await this.offersRepository.find({
       where: {

@@ -26,7 +26,7 @@ interface AuthContextValue {
   user: UserProfile | null;
   status: AuthStatus;
   isAuthenticated: boolean;
-  loginWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<UserProfile>;
   logout: () => void;
   refreshSession: () => Promise<string | null>;
 }
@@ -102,7 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  async function loginWithEmail(email: string, password: string) {
+  async function loginWithEmail(
+    email: string,
+    password: string,
+  ): Promise<UserProfile> {
     const session = await authenticateWithEmail(email, password);
 
     saveStoredSession({
@@ -114,6 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRefreshToken(session.refreshToken);
     setUser(session.user);
     setStatus('authenticated');
+
+    return session.user;
   }
 
   function logout() {
