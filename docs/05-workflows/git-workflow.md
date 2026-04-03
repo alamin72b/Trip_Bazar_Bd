@@ -78,6 +78,31 @@ Examples:
 3. Merge `develop` into `main`.
 4. Tag or document the milestone if needed.
 
+### Project Merge Helper
+
+TripBazarBD also includes a project-local helper for merging the current task branch into `develop`.
+
+Use it when:
+- the current branch is a normal task branch
+- the working tree is clean
+- you want a guarded local merge flow with validation and push confirmation
+
+Command:
+
+```bash
+bash scripts/merge-into-develop.sh
+```
+
+The helper:
+- reads the current branch automatically
+- refuses `main`, `develop`, and unsupported branch names
+- updates local `develop` from `origin`
+- merges the current task branch into `develop`
+- runs safe validation commands when available
+- asks before pushing `develop`
+
+See [merge-into-develop-helper.md](./merge-into-develop-helper.md) for the full workflow.
+
 ## 4. Conventional Commit Format
 
 Use this format:
@@ -187,6 +212,11 @@ This should be provided proactively so the user does not need to ask for Git com
 ### Push Branch
 ```bash
 git push -u origin docs/project-workflow
+```
+
+### Merge Current Task Branch Into `develop`
+```bash
+bash scripts/merge-into-develop.sh
 ```
 
 ## 7. Why This Workflow Fits TripBazarBD
