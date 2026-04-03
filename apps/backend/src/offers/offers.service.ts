@@ -43,17 +43,21 @@ export class OffersService {
   }
 
   async getAdminOfferById(id: string): Promise<OfferResponseDto> {
-    const offer = await this.offersRepository.findOne({
-      where: {
-        id,
-      },
-    });
+    const offer = await this.findOfferById(id);
 
     if (!offer) {
       throw new NotFoundException('Offer not found.');
     }
 
     return this.toResponseDto(offer);
+  }
+
+  async findOfferById(id: string): Promise<Offer | null> {
+    return this.offersRepository.findOne({
+      where: {
+        id,
+      },
+    });
   }
 
   async updateOffer(

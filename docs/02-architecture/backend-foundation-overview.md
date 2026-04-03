@@ -24,6 +24,8 @@ This gives the repository a cleaner multi-app layout and makes it easier to add 
   - owns startup admin bootstrap and admin-only proof routes
 - `OffersModule`
   - owns offer persistence, admin offer management, and public offer browsing
+- `ReviewsModule`
+  - owns review persistence, authenticated review submission, and public review listing
 - `HealthModule`
   - first non-business module
   - provides a simple health endpoint for runtime verification
@@ -59,6 +61,8 @@ Application bootstrap is responsible for:
   - allow authenticated admins to manage offers
 - Public offer routes `/api/v1/offers`
   - expose published offers for guest and user browsing
+- Offer review routes `/api/v1/offers/:offerId/reviews`
+  - allow authenticated users to create reviews and public users to list reviews
 - Swagger endpoint `/docs`
   - documents the current API contract
 
@@ -70,12 +74,12 @@ Application bootstrap is responsible for:
 - It keeps authentication concerns separate from user persistence so later authorization work can build on a clean base.
 
 ## Next Planned Modules
-- `reviews`
 
-`auth`, `users`, `admin`, and `offers` now define the backend foundation plus the first product data module.
+`auth`, `users`, `admin`, `offers`, and `reviews` now define the backend foundation plus the first user-generated content flow.
 
 Future work should build on this base by adding:
-- review relationships and review endpoints
+- offer rating aggregation
+- review moderation and admin review management
 - richer offers browsing features such as filters, search, and pagination
 
 These modules are intentionally not implemented in this phase.

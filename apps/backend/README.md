@@ -22,6 +22,7 @@ It is built with NestJS and currently provides the technical base for future mod
 - admin bootstrap from environment variables
 - admin-only proof endpoint with role guard protection
 - offer persistence with admin management and public browsing routes
+- review persistence with authenticated creation and public listing routes
 
 ## Project Setup
 ```bash
@@ -58,6 +59,7 @@ Important auth variables:
 - Admin proof endpoint: `GET http://localhost:3000/api/v1/admin/ping`
 - Admin offers endpoint: `GET http://localhost:3000/api/v1/admin/offers`
 - Public offers endpoint: `GET http://localhost:3000/api/v1/offers`
+- Offer reviews endpoint: `GET http://localhost:3000/api/v1/offers/:offerId/reviews`
 - Swagger docs: `http://localhost:3000/docs`
 
 ## Run Tests
@@ -67,6 +69,6 @@ npm run test:e2e
 ```
 
 ## Next Planned Modules
-- reviews
 - admin-only management flows on top of the shared users model
+- review moderation and offer rating aggregation
 - richer offer browsing features such as filters and pagination
