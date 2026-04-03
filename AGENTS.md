@@ -41,6 +41,12 @@
 - Use Conventional Commits.
 - Keep commits small and focused.
 
+## Git Start Rule
+- Before making code or documentation changes, check the current Git branch.
+- If the branch does not match the task, create or switch to the correct branch first.
+- If the working tree has unrelated uncommitted changes, stop and explain the issue before switching branches.
+- Do not commit or push automatically unless explicitly asked.
+
 ## Definition Of Done
 - Code and docs are clean and consistent.
 - Run and test steps are explained.
