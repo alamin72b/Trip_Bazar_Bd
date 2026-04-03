@@ -37,12 +37,15 @@
 ## Git Workflow Policy
 - Use one branch per task.
 - Never commit directly to `main`.
+- Use `develop` as the base branch for normal feature, fix, docs, and chore work.
+- Treat `main` as the stable branch and merge into it only for approved release-ready changes.
 - Use branch names such as `feature/...`, `fix/...`, `docs/...`, and `chore/...`.
 - Use Conventional Commits.
 - Keep commits small and focused.
 
 ## Git Start Rule
 - Before making code or documentation changes, check the current Git branch.
+- For normal development work, switch to `develop`, pull the latest changes, then create the task branch from `develop`.
 - If the branch does not match the task, create or switch to the correct branch first.
 - If the working tree has unrelated uncommitted changes, stop and explain the issue before switching branches.
 - Do not commit or push automatically unless explicitly asked.

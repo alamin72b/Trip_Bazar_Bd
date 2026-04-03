@@ -7,9 +7,10 @@ The goal is to keep work isolated, reviewable, and easy to understand for both b
 ## 1. Branch Strategy
 
 ### Main Branches
-- `main`: stable branch
+- `main`: stable, release-ready branch
+- `develop`: active integration branch for ongoing work
 
-TripBazarBD is still in an early backend-first phase, so a single stable main branch is enough for now. A separate `develop` branch can be added later if the team needs a longer integration cycle.
+TripBazarBD uses a simple `main` + `develop` workflow. `develop` is where normal work is integrated. `main` is reserved for approved, stable milestones that are ready to represent the project publicly or be handed to a client.
 
 ### Working Branches
 Create one branch per task.
@@ -29,6 +30,10 @@ Examples:
 
 ## 2. Standard Rules
 - Never commit directly to `main`.
+- Do not use `main` as the base branch for normal feature work.
+- Start feature, fix, docs, and chore branches from `develop`.
+- Merge normal task branches back into `develop`.
+- Merge `develop` into `main` only when the integrated work is stable and intentionally promoted.
 - Keep one branch focused on one task only.
 - Write or update a Technical Spec before major feature work.
 - Create an ADR when making an important architecture decision.
@@ -39,23 +44,29 @@ Examples:
 ## 3. Recommended Task Flow
 
 ### For Documentation Or Small Setup Tasks
-1. Start from the latest `main`.
+1. Start from the latest `develop`.
 2. Create a focused branch.
 3. Make the change.
 4. Review the diff.
 5. Commit with a Conventional Commit message.
 6. Push the branch to GitHub.
-7. Open a pull request.
+7. Open a pull request into `develop`.
 
 ### For Major Feature Work
-1. Start from the latest `main`.
+1. Start from the latest `develop`.
 2. Create a `feature/...` branch.
 3. Write or update the Technical Spec.
 4. Identify affected modules, request flow, and data flow.
 5. Explain the plan before implementation.
 6. Build the feature in small focused commits.
 7. Update related docs.
-8. Push the branch and open a pull request.
+8. Push the branch and open a pull request into `develop`.
+
+### For Release Promotion
+1. Confirm `develop` is in a stable state.
+2. Review the integrated changes.
+3. Merge `develop` into `main`.
+4. Tag or document the milestone if needed.
 
 ## 4. Conventional Commit Format
 
@@ -82,6 +93,8 @@ Examples:
 - The branch should solve one clear problem.
 - The title should match the main purpose of the work.
 - The description should explain what changed and why.
+- Normal task pull requests should target `develop`.
+- Release promotion pull requests should merge `develop` into `main`.
 - Docs should be updated when the change affects workflow, architecture, API, or database design.
 - Review the changed files before opening the PR.
 
@@ -89,9 +102,17 @@ Examples:
 
 ### Create A New Branch
 ```bash
+git checkout develop
+git pull origin develop
+git checkout -b docs/project-workflow
+```
+
+### Create `develop` For The First Time
+```bash
 git checkout main
 git pull origin main
-git checkout -b docs/project-workflow
+git checkout -b develop
+git push -u origin develop
 ```
 
 ### Review Changes
@@ -113,6 +134,7 @@ git push -u origin docs/project-workflow
 
 ## 7. Why This Workflow Fits TripBazarBD
 - It keeps each task isolated and easier to review.
+- It gives a clear separation between active work and stable milestones.
 - It supports backend-first planning with specs before implementation.
 - It encourages documentation as part of normal development work.
-- It remains simple enough for a beginner-friendly project without losing industry-standard discipline.
+- It remains simpler than full GitFlow while still matching a more disciplined industry-standard setup.
