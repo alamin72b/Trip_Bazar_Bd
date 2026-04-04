@@ -2,6 +2,8 @@ apps/backend/node_modules/
 apps/backend/dist/
 apps/backend/coverage/
 apps/backend/.env
+apps/backend/uploads/
+apps/backend/tripbazarbd.sqlite
 apps/frontend/node_modules/
 apps/frontend/.next/
 apps/frontend/out/
