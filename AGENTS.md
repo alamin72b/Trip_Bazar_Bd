@@ -50,6 +50,7 @@
 - For normal development work, switch to `develop`, pull the latest changes, then create the task branch from `develop`.
 - If the branch does not match the task, create or switch to the correct branch first.
 - If the working tree has unrelated uncommitted changes, stop and explain the issue before switching branches.
+- If the user asks to merge into `develop` and the working tree is not clean, do not stop at a safety warning only. Provide the exact next commands needed to continue safely, including `git add`, `git commit`, and `git push` when the changes should be kept, or `git stash` commands when they should be set aside temporarily.
 - Do not commit or push automatically unless explicitly asked.
 
 ## Definition Of Done
