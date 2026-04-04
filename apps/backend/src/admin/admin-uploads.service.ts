@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { resolveUploadRootDir } from '../config/upload-root-dir.util';
 import { AdminUploadedImageDto } from './dto/admin-uploaded-image.dto';
 import { UploadedImageFile } from './interfaces/uploaded-image-file.interface';
 
@@ -23,9 +24,9 @@ export class AdminUploadsService {
   private readonly offerImagesDir: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.uploadRootDir = this.configService.get<string>(
-      'app.uploadRootDir',
-      'uploads',
+    this.uploadRootDir = resolveUploadRootDir(
+      this.configService.get<string>('app.uploadRootDir'),
+      this.configService.get<string>('app.nodeEnv'),
     );
     this.offerImagesDir = path.join(this.uploadRootDir, 'offers');
 

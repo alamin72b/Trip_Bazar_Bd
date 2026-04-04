@@ -77,7 +77,6 @@ export function validateEnv(config: Record<string, unknown>) {
     APP_NAME: 'TripBazarBD Backend',
     APP_DESCRIPTION: 'Backend API for the TripBazarBD travel-offer platform.',
     APP_VERSION: '1.0.0',
-    UPLOAD_ROOT_DIR: '',
     DATABASE_PATH:
       config.NODE_ENV === 'test' ? ':memory:' : 'tripbazarbd.sqlite',
     JWT_ACCESS_TOKEN_SECRET: 'tripbazarbd-dev-access-secret',
