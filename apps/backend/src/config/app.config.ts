@@ -1,6 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import path from 'node:path';
-import os from 'node:os';
+import { resolveUploadRootDir } from './upload-root-dir.util';
 
 export default registerAs('app', () => ({
   name: process.env.APP_NAME ?? 'TripBazarBD Backend',
@@ -11,9 +10,8 @@ export default registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: Number.parseInt(process.env.PORT ?? '3000', 10),
   apiPrefix: process.env.API_PREFIX ?? 'api/v1',
-  uploadRootDir:
-    process.env.UPLOAD_ROOT_DIR ??
-    (process.env.NODE_ENV === 'test'
-      ? path.join(os.tmpdir(), 'tripbazarbd-test-uploads')
-      : path.join(process.cwd(), 'uploads')),
+  uploadRootDir: resolveUploadRootDir(
+    process.env.UPLOAD_ROOT_DIR,
+    process.env.NODE_ENV,
+  ),
 }));
