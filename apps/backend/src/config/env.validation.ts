@@ -8,6 +8,7 @@ import {
   Min,
   validateSync,
 } from 'class-validator';
+import { resolveUploadRootDir } from './upload-root-dir.util';
 
 class EnvironmentVariables {
   @IsOptional()
@@ -77,7 +78,6 @@ export function validateEnv(config: Record<string, unknown>) {
     APP_NAME: 'TripBazarBD Backend',
     APP_DESCRIPTION: 'Backend API for the TripBazarBD travel-offer platform.',
     APP_VERSION: '1.0.0',
-    UPLOAD_ROOT_DIR: '',
     DATABASE_PATH:
       config.NODE_ENV === 'test' ? ':memory:' : 'tripbazarbd.sqlite',
     JWT_ACCESS_TOKEN_SECRET: 'tripbazarbd-dev-access-secret',
@@ -87,6 +87,12 @@ export function validateEnv(config: Record<string, unknown>) {
     ADMIN_EMAIL: '',
     ADMIN_PASSWORD: '',
     ...config,
+    UPLOAD_ROOT_DIR: resolveUploadRootDir(
+      typeof config.UPLOAD_ROOT_DIR === 'string'
+        ? config.UPLOAD_ROOT_DIR
+        : undefined,
+      typeof config.NODE_ENV === 'string' ? config.NODE_ENV : undefined,
+    ),
   };
 
   const validatedConfig = plainToInstance(EnvironmentVariables, mergedConfig, {
