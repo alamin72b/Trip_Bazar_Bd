@@ -19,6 +19,10 @@ Do not use the helper when:
 - you are doing release promotion from `develop` to `main`
 - your working tree has uncommitted changes
 
+If the user asks for a merge while there are uncommitted changes, the correct response is not to stop at that warning alone. The workflow should also provide the exact next commands for one of these paths:
+- commit and push the pending work on the current task branch
+- stash the pending work temporarily, complete the merge, then restore the stash
+
 ## 2. Script Location
 
 Run the helper from the repository root:
@@ -38,6 +42,26 @@ Before running the helper:
 - make sure `develop` is the intended merge target
 
 The script refuses to continue if those safety checks fail.
+
+If the working tree is not clean, give the user the exact recovery commands in the same response. Example patterns:
+
+```bash
+git add <files>
+git commit -m "feat(scope): short summary"
+git push origin <current-branch>
+```
+
+or
+
+```bash
+git stash push -u -m "temp before merge to develop"
+git checkout develop
+git pull origin develop
+git merge <current-branch>
+git push origin develop
+git checkout <current-branch>
+git stash pop
+```
 
 ## 4. Exact Merge Flow
 

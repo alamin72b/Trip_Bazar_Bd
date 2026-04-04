@@ -40,6 +40,7 @@ Examples:
 - Update related docs as part of the same task.
 - Use Conventional Commits for every commit.
 - Prefer small, reviewable commits over large mixed commits.
+- When a user asks to merge into `develop` but the working tree is dirty, do not stop at "cannot safely merge." Explain the issue briefly and provide the exact `git add`, `git commit`, `git push`, or `git stash` commands needed so the user can continue immediately.
 
 ## 3. Recommended Task Flow
 
@@ -210,6 +211,14 @@ After implementation, the task closeout should include:
 - exact `git add`, `git commit`, and `git push` commands for the current branch
 
 This should be provided proactively so the user does not need to ask for Git commands again after each task.
+
+### Merge Request Expectation
+When the user asks to merge a task branch into `develop`:
+- check the current branch and working tree first
+- if the tree is clean, provide the exact merge sequence or run it if explicitly requested
+- if the tree is dirty, explain that briefly and provide the exact next commands to either commit and push the pending work or stash it before the merge
+
+The response should keep momentum. Safety checks still matter, but the user should receive actionable commands in the same reply instead of only a refusal.
 
 ### Push Branch
 ```bash
