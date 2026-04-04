@@ -15,6 +15,12 @@ import {
 import { OfferStatus } from '../enums/offer-status.enum';
 import { DATE_ONLY_PATTERN } from '../utils/expiry-date.util';
 
+const OFFER_IMAGE_URL_VALIDATION_OPTIONS = {
+  protocols: ['http', 'https'],
+  require_protocol: true,
+  require_tld: false,
+};
+
 export class CreateOfferDto {
   @ApiProperty()
   @IsString()
@@ -85,7 +91,7 @@ export class CreateOfferDto {
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()
-  @IsUrl({}, { each: true })
+  @IsUrl(OFFER_IMAGE_URL_VALIDATION_OPTIONS, { each: true })
   imageUrls!: string[];
 
   @ApiProperty({
