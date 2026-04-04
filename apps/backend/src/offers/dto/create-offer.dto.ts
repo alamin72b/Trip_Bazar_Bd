@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   ArrayNotEmpty,
   ArrayUnique,
@@ -12,6 +13,34 @@ import {
   MinLength,
 } from 'class-validator';
 import { OfferStatus } from '../enums/offer-status.enum';
+
+function normalizeImageUrls(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return [];
+  }
+
+  try {
+    const parsedValue = JSON.parse(trimmedValue) as unknown;
+
+    if (Array.isArray(parsedValue)) {
+      return parsedValue;
+    }
+  } catch {
+    return [trimmedValue];
+  }
+
+  return [trimmedValue];
+}
 
 export class CreateOfferDto {
   @ApiProperty()
@@ -68,10 +97,11 @@ export class CreateOfferDto {
   @ApiProperty({
     type: [String],
   })
+  @Transform(({ value }) => normalizeImageUrls(value))
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()
-  @IsUrl({}, { each: true })
+  @IsUrl({ require_tld: false }, { each: true })
   imageUrls!: string[];
 
   @ApiProperty({

@@ -150,6 +150,10 @@ export function AdminDashboard() {
   const [isDragActive, setIsDragActive] = useState(false);
   const [pendingActionKey, setPendingActionKey] = useState<string | null>(null);
 
+  function openImagePicker() {
+    fileInputRef.current?.click();
+  }
+
   const runAdminTask = useCallback(
     async <T,>(task: (token: string) => Promise<T>): Promise<T> => {
       let token = accessToken;
@@ -765,7 +769,7 @@ export function AdminDashboard() {
                 className={`admin-upload-dropzone ${
                   isDragActive ? 'admin-upload-dropzone--active' : ''
                 }`}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openImagePicker}
                 onDragEnter={(event) => {
                   handleDragState(event);
                   setIsDragActive(true);
@@ -783,7 +787,7 @@ export function AdminDashboard() {
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    fileInputRef.current?.click();
+                    openImagePicker();
                   }
                 }}
               >
@@ -799,7 +803,8 @@ export function AdminDashboard() {
                   disabled={isUploadingImages}
                   onClick={(event) => {
                     event.preventDefault();
-                    fileInputRef.current?.click();
+                    event.stopPropagation();
+                    openImagePicker();
                   }}
                   type="button"
                 >
