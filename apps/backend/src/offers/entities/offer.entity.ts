@@ -45,6 +45,9 @@ export class Offer {
   })
   status!: OfferStatus;
 
+  @Column({ type: 'datetime', nullable: true })
+  expiresAt!: Date | null;
+
   @Column({ type: 'simple-json' })
   imageUrls!: string[];
 

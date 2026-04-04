@@ -47,6 +47,21 @@ describe('OffersController (integration)', () => {
     await app.close();
   });
 
+  function formatDateOnly(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function getRelativeDateOnly(daysFromNow: number): string {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromNow);
+
+    return formatDateOnly(date);
+  }
+
   function createAdminExecutionContext(role: UserRole): ExecutionContext {
     const handler = Object.getOwnPropertyDescriptor(
       AdminOffersController.prototype,
@@ -72,6 +87,8 @@ describe('OffersController (integration)', () => {
   }
 
   it('admin can create and update an offer', async () => {
+    const createdExpiryDate = getRelativeDateOnly(2);
+    const updatedExpiryDate = getRelativeDateOnly(5);
     const authResponse = await authController.authenticateWithEmail({
       email: 'admin@example.com',
       password: 'admin-password-123',
@@ -93,6 +110,7 @@ describe('OffersController (integration)', () => {
       durationNights: 2,
       price: 12500,
       currency: 'BDT',
+      expiryDate: createdExpiryDate,
       imageUrls: ['https://example.com/coxs-bazar-1.jpg'],
       contactWhatsApp: '+8801700000000',
       status: OfferStatus.DRAFT,
@@ -102,11 +120,17 @@ describe('OffersController (integration)', () => {
       createdOffer.id,
       {
         status: OfferStatus.PUBLISHED,
+        expiryDate: updatedExpiryDate,
       },
     );
 
     expect(createdOffer.status).toBe(OfferStatus.DRAFT);
+    expect(createdOffer.expiresAt).not.toBeNull();
     expect(updatedOffer.status).toBe(OfferStatus.PUBLISHED);
+    expect(updatedOffer.expiresAt).not.toBeNull();
+    expect(new Date(updatedOffer.expiresAt ?? 0).getTime()).toBeGreaterThan(
+      new Date(createdOffer.expiresAt ?? 0).getTime(),
+    );
   });
 
   it('admin can delete an offer', async () => {
@@ -143,6 +167,8 @@ describe('OffersController (integration)', () => {
   });
 
   it('guest can list published offers and cannot see drafts', async () => {
+    const expiredDate = getRelativeDateOnly(-1);
+    const futureDate = getRelativeDateOnly(2);
     const createdDraftOffer = await adminOffersController.createOffer({
       title: 'Sajek Valley Escape',
       summary: 'A short hill trip package.',
@@ -152,9 +178,25 @@ describe('OffersController (integration)', () => {
       durationNights: 1,
       price: 8500,
       currency: 'BDT',
+      expiryDate: futureDate,
       imageUrls: ['https://example.com/sajek-1.jpg'],
       contactWhatsApp: '+8801700000000',
       status: OfferStatus.DRAFT,
+    });
+
+    const expiredOffer = await adminOffersController.createOffer({
+      title: 'Kuakata Sunset Break',
+      summary: 'A published offer that should already be expired.',
+      description:
+        'Two days and one night in Kuakata with sunset beach time and hotel included.',
+      destination: 'Kuakata',
+      durationNights: 1,
+      price: 9800,
+      currency: 'BDT',
+      expiryDate: expiredDate,
+      imageUrls: ['https://example.com/kuakata-1.jpg'],
+      contactWhatsApp: '+8801700000000',
+      status: OfferStatus.PUBLISHED,
     });
 
     await adminOffersController.createOffer({
@@ -166,6 +208,7 @@ describe('OffersController (integration)', () => {
       durationNights: 2,
       price: 12500,
       currency: 'BDT',
+      expiryDate: futureDate,
       imageUrls: ['https://example.com/coxs-bazar-1.jpg'],
       contactWhatsApp: '+8801700000000',
       status: OfferStatus.PUBLISHED,
@@ -178,9 +221,13 @@ describe('OffersController (integration)', () => {
     expect(
       publicOffers.some((offer) => offer.id === createdDraftOffer.id),
     ).toBe(false);
+    expect(publicOffers.some((offer) => offer.id === expiredOffer.id)).toBe(
+      false,
+    );
   });
 
   it('public detail resolves by slug', async () => {
+    const futureDate = getRelativeDateOnly(3);
     const createdOffer = await adminOffersController.createOffer({
       title: 'Bandarban Adventure Tour',
       summary: 'A guided hill and nature package.',
@@ -190,6 +237,7 @@ describe('OffersController (integration)', () => {
       durationNights: 3,
       price: 18000,
       currency: 'BDT',
+      expiryDate: futureDate,
       imageUrls: ['https://example.com/bandarban-1.jpg'],
       contactWhatsApp: '+8801700000000',
       status: OfferStatus.PUBLISHED,
@@ -201,5 +249,26 @@ describe('OffersController (integration)', () => {
 
     expect(publicOffer.id).toBe(createdOffer.id);
     expect(publicOffer.slug).toBe(createdOffer.slug);
+  });
+
+  it('public detail returns 404 for an expired published offer', async () => {
+    const expiredOffer = await adminOffersController.createOffer({
+      title: 'Rangamati Lake Escape',
+      summary: 'A once-live lake trip that is now expired.',
+      description:
+        'Three days and two nights in Rangamati with boat rides and accommodation included.',
+      destination: 'Rangamati',
+      durationNights: 2,
+      price: 14000,
+      currency: 'BDT',
+      expiryDate: getRelativeDateOnly(-1),
+      imageUrls: ['https://example.com/rangamati-1.jpg'],
+      contactWhatsApp: '+8801700000000',
+      status: OfferStatus.PUBLISHED,
+    });
+
+    await expect(
+      publicOffersController.getPublishedOfferBySlug(expiredOffer.slug),
+    ).rejects.toThrow('Offer not found.');
   });
 });

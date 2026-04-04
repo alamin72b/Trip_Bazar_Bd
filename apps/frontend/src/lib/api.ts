@@ -86,9 +86,7 @@ function withAccessToken(accessToken: string): HeadersInit {
 
 export function getPublicOffers(): Promise<Offer[]> {
   return request<Offer[]>('/offers', {
-    next: {
-      revalidate: 60,
-    },
+    noStore: true,
   });
 }
 
@@ -307,6 +305,14 @@ export function formatDateTime(value: string): string {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+  }).format(new Date(value));
+}
+
+export function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('en-BD', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   }).format(new Date(value));
 }
 

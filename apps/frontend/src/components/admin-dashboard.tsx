@@ -17,6 +17,7 @@ import {
   deleteAdminOffer,
   deleteAdminReview,
   formatCurrency,
+  formatDate,
   formatDateTime,
   getAdminOffers,
   getAdminReviews,
@@ -53,6 +54,7 @@ interface OfferFormState {
   price: string;
   currency: string;
   status: OfferStatus;
+  expiryDate: string;
   images: OfferImageState[];
   contactWhatsApp: string;
 }
@@ -66,6 +68,7 @@ const defaultOfferFormState: OfferFormState = {
   price: '0',
   currency: 'BDT',
   status: 'draft',
+  expiryDate: '',
   images: [],
   contactWhatsApp: '+8801700000000',
 };
@@ -88,6 +91,23 @@ function mapUploadedImageToState(image: AdminUploadedImage): OfferImageState {
   };
 }
 
+function toDateInputValue(value: string | null): string {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function isOfferExpired(offer: Offer): boolean {
+  return offer.expiresAt ? new Date(offer.expiresAt) < new Date() : false;
+}
+
 function mapOfferToFormState(offer: Offer): OfferFormState {
   return {
     title: offer.title,
@@ -98,6 +118,7 @@ function mapOfferToFormState(offer: Offer): OfferFormState {
     price: String(offer.price),
     currency: offer.currency,
     status: offer.status,
+    expiryDate: toDateInputValue(offer.expiresAt),
     images: offer.imageUrls.map((url) => ({
       url,
       filename: deriveFilenameFromUrl(url),
@@ -120,6 +141,7 @@ function toOfferPayload(values: OfferFormState): AdminOfferInput {
     price: Number(values.price),
     currency: values.currency.trim().toUpperCase(),
     status: values.status,
+    expiryDate: values.expiryDate.trim() || null,
     imageUrls: values.images.map((image) => image.url),
     contactWhatsApp: values.contactWhatsApp.trim(),
   };
@@ -422,7 +444,7 @@ export function AdminDashboard() {
   }
 
   const publishedOfferCount = offers.filter(
-    (offer) => offer.status === 'published',
+    (offer) => offer.status === 'published' && !isOfferExpired(offer),
   ).length;
   const hiddenReviewCount = reviews.filter(
     (review) => review.status === 'hidden',
@@ -500,7 +522,7 @@ export function AdminDashboard() {
           <article className="admin-stat-card">
             <p className="eyebrow">Offers</p>
             <strong>{offers.length}</strong>
-            <span>{publishedOfferCount} published right now</span>
+            <span>{publishedOfferCount} publicly live right now</span>
           </article>
           <article className="admin-stat-card">
             <p className="eyebrow">Reviews</p>
@@ -573,6 +595,14 @@ export function AdminDashboard() {
                     <p>{offer.summary}</p>
                     <div className="admin-record-card__meta">
                       <span>{formatCurrency(offer.price, offer.currency)}</span>
+                      {offer.expiresAt ? (
+                        <span>
+                          {isOfferExpired(offer) ? 'Expired' : 'Expires'}{' '}
+                          {formatDate(offer.expiresAt)}
+                        </span>
+                      ) : (
+                        <span>No expiry date</span>
+                      )}
                       <span>Updated {formatDateTime(offer.updatedAt)}</span>
                     </div>
                     <div className="admin-record-card__actions">
@@ -596,7 +626,7 @@ export function AdminDashboard() {
                       >
                         Delete
                       </button>
-                      {offer.status === 'published' ? (
+                      {offer.status === 'published' && !isOfferExpired(offer) ? (
                         <Link
                           className="button button-secondary"
                           href={`/offers/${offer.slug}`}
@@ -673,9 +703,19 @@ export function AdminDashboard() {
                   }
                   value={offerForm.status}
                 >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
+                  <option value="draft">Draft (deactivated)</option>
+                  <option value="published">Published (active)</option>
                 </select>
+              </label>
+              <label className="field">
+                <span>Expiry date</span>
+                <input
+                  onChange={(event) =>
+                    updateOfferForm('expiryDate', event.target.value)
+                  }
+                  type="date"
+                  value={offerForm.expiryDate}
+                />
               </label>
               <label className="field">
                 <span>Duration nights</span>

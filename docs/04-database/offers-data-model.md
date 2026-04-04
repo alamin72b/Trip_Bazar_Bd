@@ -31,6 +31,9 @@ In the admin dashboard, those URLs are now typically created through local backe
   - currency code such as `BDT`
 - `status`
   - enum value: `draft` or `published`
+- `expiresAt`
+  - nullable timestamp for the public expiry cutoff
+  - derived from admin `expiryDate` input and stored as end-of-day in server local time
 - `imageUrls`
   - simple JSON array of image URL strings
 - `contactWhatsApp`
@@ -44,7 +47,9 @@ In the admin dashboard, those URLs are now typically created through local backe
 - public detail uses `slug`, not internal `id`
 - admin UI generates `slug` automatically from the title by default
 - drafts are stored normally but hidden from public routes
+- expired published offers are stored normally but hidden from public routes
 - admin routes can view both drafts and published offers
+- admin routes can also view expired offers for editing and audit purposes
 - uploaded offer media is stored locally on the backend in v1, but the offer still stores only public image URLs
 
 ## Indexes

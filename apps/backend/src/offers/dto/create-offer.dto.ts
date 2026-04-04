@@ -8,10 +8,12 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   Min,
   MinLength,
 } from 'class-validator';
 import { OfferStatus } from '../enums/offer-status.enum';
+import { DATE_ONLY_PATTERN } from '../utils/expiry-date.util';
 
 export class CreateOfferDto {
   @ApiProperty()
@@ -64,6 +66,18 @@ export class CreateOfferDto {
   @IsOptional()
   @IsEnum(OfferStatus)
   status?: OfferStatus;
+
+  @ApiPropertyOptional({
+    example: '2026-04-30',
+    description:
+      'Optional date-only expiry in YYYY-MM-DD format. The backend stores it as end-of-day server time.',
+    nullable: true,
+  })
+  @IsOptional()
+  @Matches(DATE_ONLY_PATTERN, {
+    message: 'expiryDate must use YYYY-MM-DD format.',
+  })
+  expiryDate?: string | null;
 
   @ApiProperty({
     type: [String],

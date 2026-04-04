@@ -42,6 +42,10 @@ The caller must also have the `admin` role.
 ### POST /api/v1/admin/offers
 - create a new offer using the same DTO shape as the backend offer module
 - `slug` remains optional in the backend contract and is generated automatically from `title` in the admin UI flow
+- optional `expiryDate` uses `YYYY-MM-DD` and is stored as end-of-day server time
+- keep using `status` for activation:
+  - `published` = active
+  - `draft` = deactivated
 
 ### GET /api/v1/admin/offers/:id
 - fetch one offer by internal ID
@@ -49,6 +53,7 @@ The caller must also have the `admin` role.
 ### PATCH /api/v1/admin/offers/:id
 - update one offer by internal ID
 - if the title changes and no explicit slug is supplied, the backend regenerates the slug from the current title
+- `expiryDate` can be updated or cleared with `null`
 
 ### DELETE /api/v1/admin/offers/:id
 - delete one offer permanently

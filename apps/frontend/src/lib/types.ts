@@ -13,6 +13,7 @@ export interface Offer {
   price: number;
   currency: string;
   status: OfferStatus;
+  expiresAt: string | null;
   imageUrls: string[];
   contactWhatsApp: string;
   createdAt: string;
@@ -78,6 +79,7 @@ export interface AdminOfferInput {
   price: number;
   currency: string;
   status: OfferStatus;
+  expiryDate?: string | null;
   imageUrls: string[];
   contactWhatsApp: string;
 }

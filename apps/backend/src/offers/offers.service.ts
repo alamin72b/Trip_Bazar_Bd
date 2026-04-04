@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, MoreThanOrEqual, Repository } from 'typeorm';
 import { Offer } from './entities/offer.entity';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 import { OfferResponseDto } from './dto/offer-response.dto';
 import { OfferStatus } from './enums/offer-status.enum';
+import { parseDateOnlyToEndOfDay } from './utils/expiry-date.util';
 import { slugify } from './utils/slug.util';
 
 @Injectable()
@@ -16,15 +21,17 @@ export class OffersService {
   ) {}
 
   async createOffer(createOfferDto: CreateOfferDto): Promise<OfferResponseDto> {
+    const { expiryDate, ...offerInput } = createOfferDto;
     const slug = await this.generateUniqueSlug(
-      createOfferDto.slug ?? createOfferDto.title,
+      offerInput.slug ?? offerInput.title,
     );
 
     const offer = this.offersRepository.create({
-      ...createOfferDto,
+      ...offerInput,
       slug,
-      currency: createOfferDto.currency.toUpperCase(),
-      status: createOfferDto.status ?? OfferStatus.DRAFT,
+      currency: offerInput.currency.toUpperCase(),
+      status: offerInput.status ?? OfferStatus.DRAFT,
+      expiresAt: this.resolveExpiresAt(expiryDate) ?? null,
     });
 
     const savedOffer = await this.offersRepository.save(offer);
@@ -81,9 +88,13 @@ export class OffersService {
       );
     }
 
+    const { expiryDate, ...offerInput } = updateOfferDto;
+    const expiresAt = this.resolveExpiresAt(expiryDate);
+
     Object.assign(offer, {
-      ...updateOfferDto,
-      currency: updateOfferDto.currency?.toUpperCase() ?? offer.currency,
+      ...offerInput,
+      currency: offerInput.currency?.toUpperCase() ?? offer.currency,
+      ...(expiresAt !== undefined ? { expiresAt } : {}),
     });
 
     const updatedOffer = await this.offersRepository.save(offer);
@@ -102,10 +113,18 @@ export class OffersService {
   }
 
   async getPublishedOffers(): Promise<OfferResponseDto[]> {
+    const now = new Date();
     const offers = await this.offersRepository.find({
-      where: {
-        status: OfferStatus.PUBLISHED,
-      },
+      where: [
+        {
+          status: OfferStatus.PUBLISHED,
+          expiresAt: IsNull(),
+        },
+        {
+          status: OfferStatus.PUBLISHED,
+          expiresAt: MoreThanOrEqual(now),
+        },
+      ],
       order: {
         createdAt: 'DESC',
       },
@@ -115,11 +134,20 @@ export class OffersService {
   }
 
   async getPublishedOfferBySlug(slug: string): Promise<OfferResponseDto> {
+    const now = new Date();
     const offer = await this.offersRepository.findOne({
-      where: {
-        slug,
-        status: OfferStatus.PUBLISHED,
-      },
+      where: [
+        {
+          slug,
+          status: OfferStatus.PUBLISHED,
+          expiresAt: IsNull(),
+        },
+        {
+          slug,
+          status: OfferStatus.PUBLISHED,
+          expiresAt: MoreThanOrEqual(now),
+        },
+      ],
     });
 
     if (!offer) {
@@ -178,10 +206,31 @@ export class OffersService {
       price: offer.price,
       currency: offer.currency,
       status: offer.status,
+      expiresAt: offer.expiresAt?.toISOString() ?? null,
       imageUrls: offer.imageUrls,
       contactWhatsApp: offer.contactWhatsApp,
       createdAt: offer.createdAt.toISOString(),
       updatedAt: offer.updatedAt.toISOString(),
     };
+  }
+
+  private resolveExpiresAt(
+    expiryDate?: string | null,
+  ): Date | null | undefined {
+    if (expiryDate === undefined) {
+      return undefined;
+    }
+
+    if (expiryDate === null) {
+      return null;
+    }
+
+    try {
+      return parseDateOnlyToEndOfDay(expiryDate);
+    } catch {
+      throw new BadRequestException(
+        'expiryDate must be a valid date in YYYY-MM-DD format.',
+      );
+    }
   }
 }

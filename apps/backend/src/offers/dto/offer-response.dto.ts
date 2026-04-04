@@ -35,6 +35,12 @@ export class OfferResponseDto {
   status!: OfferStatus;
 
   @ApiProperty({
+    nullable: true,
+    example: '2026-04-30T17:59:59.999Z',
+  })
+  expiresAt!: string | null;
+
+  @ApiProperty({
     type: [String],
   })
   imageUrls!: string[];
