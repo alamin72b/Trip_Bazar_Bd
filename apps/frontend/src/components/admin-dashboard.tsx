@@ -443,6 +443,14 @@ export function AdminDashboard() {
     await uploadFiles(files);
   }
 
+  function openImagePicker() {
+    if (isUploadingImages) {
+      return;
+    }
+
+    fileInputRef.current?.click();
+  }
+
   const publishedOfferCount = offers.filter(
     (offer) => offer.status === 'published' && !isOfferExpired(offer),
   ).length;
@@ -805,7 +813,7 @@ export function AdminDashboard() {
                 className={`admin-upload-dropzone ${
                   isDragActive ? 'admin-upload-dropzone--active' : ''
                 }`}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openImagePicker}
                 onDragEnter={(event) => {
                   handleDragState(event);
                   setIsDragActive(true);
@@ -823,7 +831,7 @@ export function AdminDashboard() {
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    fileInputRef.current?.click();
+                    openImagePicker();
                   }
                 }}
               >
@@ -839,7 +847,8 @@ export function AdminDashboard() {
                   disabled={isUploadingImages}
                   onClick={(event) => {
                     event.preventDefault();
-                    fileInputRef.current?.click();
+                    event.stopPropagation();
+                    openImagePicker();
                   }}
                   type="button"
                 >
